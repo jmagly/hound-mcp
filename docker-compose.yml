@@ -1,16 +1,16 @@
-# MCP-Hound Docker Compose
+# CodeHound MCP Docker Compose
 # Development and testing configuration
 
 services:
   #============================================================================
   # Production service
   #============================================================================
-  mcp-hound:
+  codehound:
     build:
       context: .
       target: production
-    image: jmagly/mcp-hound:latest
-    container_name: mcp-hound
+    image: jmagly/codehound-mcp:latest
+    container_name: codehound-mcp
     restart: unless-stopped
     ports:
       - "3100:3000"
@@ -39,8 +39,8 @@ services:
     build:
       context: .
       target: test
-    image: jmagly/mcp-hound:test
-    container_name: mcp-hound-test
+    image: jmagly/codehound-mcp:test
+    container_name: codehound-mcp-test
     profiles:
       - test
     # Test stage runs tests during build, so this just validates the build
@@ -52,7 +52,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: mcp-hound-dev
+    container_name: codehound-mcp-dev
     profiles:
       - dev
     ports:

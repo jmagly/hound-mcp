@@ -1,12 +1,12 @@
 {
-  "name": "@jmagly/mcp-hound",
-  "version": "0.1.0",
-  "description": "MCP server for Hound code search integration with Claude Code and other AI agents",
+  "name": "@jmagly/codehound-mcp",
+  "version": "0.2.0",
+  "description": "MCP server for multi-modal code search: text (Hound), symbols (tree-sitter), and future semantic search",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "mcp-hound": "dist/index.js",
-    "mcp-hound-auth": "dist/cli.js"
+    "codehound-mcp": "dist/index.js",
+    "codehound-auth": "dist/cli.js"
   },
   "files": [
     "dist",

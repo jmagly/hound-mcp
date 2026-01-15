@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * MCP-Hound Server
+ * CodeHound MCP Server
  *
- * MCP server exposing Hound code search to Claude Code and other MCP clients.
- * Supports both stdio (local) and HTTP (remote) transport modes.
+ * Multi-modal code search MCP server: text search (Hound), symbols (tree-sitter),
+ * and future semantic search. Supports both stdio and HTTP transport modes.
  * See ADR-001 for architecture decisions.
  */
 
@@ -59,8 +59,8 @@ function parseArgs(): { mode: 'stdio' | 'http'; port: number } {
 function createMcpServer(): Server {
   const mcpServer = new Server(
     {
-      name: 'hound-code-search',
-      version: '0.1.0',
+      name: 'codehound-mcp',
+      version: '0.2.0',
     },
     {
       capabilities: {
@@ -150,7 +150,7 @@ async function startStdioServer() {
   const mcpServer = createMcpServer();
   const transport = new StdioServerTransport();
   await mcpServer.connect(transport);
-  console.error('MCP-Hound server started (stdio mode)');
+  console.error('CodeHound MCP server started (stdio mode)');
 }
 
 /**
@@ -309,7 +309,7 @@ async function startHttpServer(port: number) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Authorize MCP-Hound</title>
+  <title>Authorize CodeHound</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -385,7 +385,7 @@ async function startHttpServer(port: number) {
 <body>
   <div class="card">
     <div class="logo">🔍</div>
-    <h1>Authorize MCP-Hound</h1>
+    <h1>Authorize CodeHound</h1>
     <p class="subtitle">Code Search for Claude</p>
 
     <div class="client-info">
@@ -779,7 +779,7 @@ async function startHttpServer(port: number) {
   });
 
   httpServer.listen(port, () => {
-    console.error(`MCP-Hound server started (HTTP mode) on port ${port}`);
+    console.error(`CodeHound MCP server started (HTTP mode) on port ${port}`);
     console.error(`  Health: http://localhost:${port}/health`);
     console.error(`  Token:  http://localhost:${port}/oauth/token`);
     console.error(`  MCP:    http://localhost:${port}/`);
