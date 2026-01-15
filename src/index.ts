@@ -22,6 +22,7 @@ import { houndSearch, houndSearchSchema } from './tools/search.js';
 import { houndRepos, houndReposSchema } from './tools/repos.js';
 import { houndFileContext, houndFileContextSchema } from './tools/context.js';
 import { houndRepoStats, houndRepoStatsSchema } from './tools/stats.js';
+import { houndSearchSymbol, houndSearchSymbolSchema } from './tools/symbols.js';
 import {
   validateClientCredentials,
   generateAccessToken,
@@ -97,6 +98,12 @@ function createMcpServer(): Server {
             'Get repository statistics including file counts, line counts, and language breakdown.',
           inputSchema: houndRepoStatsSchema,
         },
+        {
+          name: 'hound_search_symbol',
+          description:
+            'Search for code symbols (functions, classes, methods, interfaces, types) by name using tree-sitter AST parsing. Supports wildcards (* and ?).',
+          inputSchema: houndSearchSymbolSchema,
+        },
       ],
     };
   });
@@ -115,6 +122,8 @@ function createMcpServer(): Server {
           return await houndFileContext(args);
         case 'hound_repo_stats':
           return await houndRepoStats(args);
+        case 'hound_search_symbol':
+          return await houndSearchSymbol(args);
         default:
           return {
             content: [

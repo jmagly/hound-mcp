@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript interfaces for MCP-Hound
+ * Shared TypeScript interfaces for CodeHound MCP
  */
 
 // ============================================================================
@@ -179,4 +179,61 @@ export interface RepoStatsResult {
   totalRepos: number;
   totalFiles: number;
   totalLines: number;
+}
+
+// ============================================================================
+// Symbol Search Types
+// ============================================================================
+
+/**
+ * Supported symbol types
+ */
+export type SymbolKind =
+  | 'function'
+  | 'class'
+  | 'method'
+  | 'interface'
+  | 'type'
+  | 'variable'
+  | 'constant'
+  | 'module';
+
+/**
+ * Symbol search options
+ */
+export interface SymbolSearchOptions {
+  /** Symbol name pattern (supports wildcards: * for any, ? for single char) */
+  name: string;
+  /** Filter by symbol kind */
+  kind?: SymbolKind;
+  /** Filter by repository */
+  repos?: string;
+  /** Filter by language */
+  language?: string;
+  /** Max results to return (default: 20) */
+  limit?: number;
+}
+
+/**
+ * A symbol found in code
+ */
+export interface SymbolMatch {
+  repo: string;
+  file: string;
+  line: number;
+  kind: SymbolKind;
+  name: string;
+  signature?: string;
+  scope?: string;
+  language: string;
+  url: string;
+}
+
+/**
+ * Symbol search results
+ */
+export interface SymbolSearchResult {
+  results: SymbolMatch[];
+  totalMatches: number;
+  reposSearched: number;
 }
