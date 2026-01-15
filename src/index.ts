@@ -21,6 +21,7 @@ import {
 import { houndSearch, houndSearchSchema } from './tools/search.js';
 import { houndRepos, houndReposSchema } from './tools/repos.js';
 import { houndFileContext, houndFileContextSchema } from './tools/context.js';
+import { houndRepoStats, houndRepoStatsSchema } from './tools/stats.js';
 import {
   validateClientCredentials,
   generateAccessToken,
@@ -90,6 +91,12 @@ function createMcpServer(): Server {
             'Get extended context around a specific line in a file. Useful for understanding code around a search match.',
           inputSchema: houndFileContextSchema,
         },
+        {
+          name: 'hound_repo_stats',
+          description:
+            'Get repository statistics including file counts, line counts, and language breakdown.',
+          inputSchema: houndRepoStatsSchema,
+        },
       ],
     };
   });
@@ -106,6 +113,8 @@ function createMcpServer(): Server {
           return await houndRepos();
         case 'hound_file_context':
           return await houndFileContext(args);
+        case 'hound_repo_stats':
+          return await houndRepoStats(args);
         default:
           return {
             content: [

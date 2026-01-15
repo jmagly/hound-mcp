@@ -141,3 +141,42 @@ export interface HoundClientConfig {
  * Error codes for HoundError
  */
 export type HoundErrorCode = 'TIMEOUT' | 'NETWORK' | 'API_ERROR' | 'PARSE_ERROR';
+
+// ============================================================================
+// Repository Statistics Types
+// ============================================================================
+
+/**
+ * Language statistics for a repository
+ */
+export interface LanguageStats {
+  files: number;
+  lines: number;
+}
+
+/**
+ * Statistics for a single repository
+ */
+export interface RepoStats {
+  repo: string;
+  totalFiles: number;
+  totalLines: number;
+  languages: { [language: string]: LanguageStats };
+}
+
+/**
+ * Repository statistics options
+ */
+export interface RepoStatsOptions {
+  repo?: string;
+}
+
+/**
+ * Repository statistics result
+ */
+export interface RepoStatsResult {
+  repos: RepoStats[];
+  totalRepos: number;
+  totalFiles: number;
+  totalLines: number;
+}

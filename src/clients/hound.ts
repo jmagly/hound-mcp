@@ -15,6 +15,9 @@ import type {
   ReposResult,
   RepoInfo,
   HoundErrorCode,
+  RepoStatsOptions,
+  RepoStatsResult,
+  RepoStats,
 } from '../types.js';
 
 /**
@@ -185,6 +188,228 @@ export class HoundClient {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Get repository statistics by searching for all indexed files
+   */
+  async getRepoStats(options: RepoStatsOptions = {}): Promise<RepoStatsResult> {
+    const { repo = '*' } = options;
+
+    // Convert repo display name to Hound key if specific repo
+    let reposParam = repo;
+    if (repo !== '*') {
+      reposParam = this.repoNameToKey(repo);
+    }
+
+    // Search with a pattern that matches all files
+    const params = new URLSearchParams({
+      q: '.',
+      repos: reposParam,
+      i: 'nope',
+    });
+
+    const url = `${this.config.baseUrl}/api/v1/search?${params}`;
+
+    try {
+      const response = await this.fetch(url);
+      const data = (await response.json()) as HoundRawSearchResponse;
+      return this.transformStatsResponse(data);
+    } catch (error) {
+      if (error instanceof HoundError) throw error;
+      throw new HoundError(
+        `Failed to get repo stats: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'NETWORK'
+      );
+    }
+  }
+
+  /**
+   * Transform Hound search response into statistics
+   */
+  private transformStatsResponse(data: HoundRawSearchResponse): RepoStatsResult {
+    const repoStatsMap = new Map<string, RepoStats>();
+
+    for (const [repoKey, repoData] of Object.entries(data.Results || {})) {
+      const repoName = this.repoKeyToName(repoKey);
+
+      // Initialize repo stats if not exists
+      if (!repoStatsMap.has(repoName)) {
+        repoStatsMap.set(repoName, {
+          repo: repoName,
+          totalFiles: 0,
+          totalLines: 0,
+          languages: {},
+        });
+      }
+
+      const stats = repoStatsMap.get(repoName)!;
+      const filesProcessed = new Set<string>();
+
+      for (const fileMatch of repoData.Matches || []) {
+        const filename = fileMatch.Filename;
+
+        // Track unique files
+        if (!filesProcessed.has(filename)) {
+          filesProcessed.add(filename);
+          stats.totalFiles++;
+
+          // Detect language from extension
+          const language = this.detectLanguage(filename);
+
+          if (!stats.languages[language]) {
+            stats.languages[language] = { files: 0, lines: 0 };
+          }
+          stats.languages[language].files++;
+        }
+
+        // Count lines from matches (approximate - tracks highest line number seen per file)
+        for (const match of fileMatch.Matches || []) {
+          const language = this.detectLanguage(filename);
+          if (stats.languages[language]) {
+            // Use the highest line number as an approximation of file length
+            stats.languages[language].lines = Math.max(
+              stats.languages[language].lines,
+              match.LineNumber
+            );
+          }
+        }
+      }
+
+      // Sum up total lines from language breakdown
+      stats.totalLines = Object.values(stats.languages).reduce(
+        (sum, lang) => sum + lang.lines,
+        0
+      );
+    }
+
+    // Convert map to sorted array
+    const repos = Array.from(repoStatsMap.values()).sort((a, b) =>
+      a.repo.localeCompare(b.repo)
+    );
+
+    return {
+      repos,
+      totalRepos: repos.length,
+      totalFiles: repos.reduce((sum, r) => sum + r.totalFiles, 0),
+      totalLines: repos.reduce((sum, r) => sum + r.totalLines, 0),
+    };
+  }
+
+  /**
+   * Detect programming language from file extension
+   */
+  private detectLanguage(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+
+    const languageMap: { [key: string]: string } = {
+      // JavaScript/TypeScript
+      js: 'JavaScript',
+      jsx: 'JavaScript',
+      ts: 'TypeScript',
+      tsx: 'TypeScript',
+      mjs: 'JavaScript',
+      cjs: 'JavaScript',
+      // Web
+      html: 'HTML',
+      htm: 'HTML',
+      css: 'CSS',
+      scss: 'SCSS',
+      sass: 'Sass',
+      less: 'Less',
+      // Config/Data
+      json: 'JSON',
+      yaml: 'YAML',
+      yml: 'YAML',
+      toml: 'TOML',
+      xml: 'XML',
+      // Shell
+      sh: 'Shell',
+      bash: 'Shell',
+      zsh: 'Shell',
+      fish: 'Shell',
+      // Python
+      py: 'Python',
+      pyw: 'Python',
+      pyi: 'Python',
+      // Go
+      go: 'Go',
+      // Rust
+      rs: 'Rust',
+      // Java/JVM
+      java: 'Java',
+      kt: 'Kotlin',
+      kts: 'Kotlin',
+      scala: 'Scala',
+      groovy: 'Groovy',
+      // C family
+      c: 'C',
+      h: 'C',
+      cpp: 'C++',
+      cc: 'C++',
+      cxx: 'C++',
+      hpp: 'C++',
+      hxx: 'C++',
+      // C#
+      cs: 'C#',
+      // Ruby
+      rb: 'Ruby',
+      // PHP
+      php: 'PHP',
+      // Docs
+      md: 'Markdown',
+      markdown: 'Markdown',
+      rst: 'reStructuredText',
+      txt: 'Text',
+      // SQL
+      sql: 'SQL',
+      // Docker
+      dockerfile: 'Dockerfile',
+      // Terraform
+      tf: 'Terraform',
+      tfvars: 'Terraform',
+      // Other
+      vue: 'Vue',
+      svelte: 'Svelte',
+      lua: 'Lua',
+      r: 'R',
+      swift: 'Swift',
+      m: 'Objective-C',
+      mm: 'Objective-C++',
+      pl: 'Perl',
+      pm: 'Perl',
+      ex: 'Elixir',
+      exs: 'Elixir',
+      erl: 'Erlang',
+      hrl: 'Erlang',
+      hs: 'Haskell',
+      lhs: 'Haskell',
+      clj: 'Clojure',
+      cljs: 'ClojureScript',
+      elm: 'Elm',
+      fs: 'F#',
+      fsx: 'F#',
+      ml: 'OCaml',
+      mli: 'OCaml',
+      nim: 'Nim',
+      zig: 'Zig',
+      v: 'V',
+      d: 'D',
+      dart: 'Dart',
+      jl: 'Julia',
+    };
+
+    // Check for Dockerfile (no extension)
+    if (filename.toLowerCase() === 'dockerfile') {
+      return 'Dockerfile';
+    }
+
+    // Check for Makefile
+    if (filename.toLowerCase() === 'makefile') {
+      return 'Makefile';
+    }
+
+    return languageMap[ext] || 'Other';
   }
 
   /**
