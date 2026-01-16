@@ -90,7 +90,17 @@ export interface SymbolSearchResult {
 /**
  * Supported languages for symbol extraction
  */
-export type SupportedLanguage = 'typescript' | 'javascript' | 'python' | 'go';
+export type SupportedLanguage =
+  | 'typescript'
+  | 'javascript'
+  | 'python'
+  | 'go'
+  | 'rust'
+  | 'solidity'
+  | 'csharp'
+  | 'fsharp'
+  | 'vue'
+  | 'bash';
 
 /**
  * Language configuration for parsing
@@ -129,6 +139,36 @@ export const LANGUAGE_CONFIGS: Record<SupportedLanguage, LanguageConfig> = {
     extensions: ['.go'],
     grammarName: 'go',
     wasmFile: 'tree-sitter-go.wasm',
+  },
+  rust: {
+    extensions: ['.rs'],
+    grammarName: 'rust',
+    wasmFile: 'tree-sitter-rust.wasm',
+  },
+  solidity: {
+    extensions: ['.sol'],
+    grammarName: 'solidity',
+    wasmFile: 'tree-sitter-solidity.wasm',
+  },
+  csharp: {
+    extensions: ['.cs'],
+    grammarName: 'c_sharp',
+    wasmFile: 'tree-sitter-c-sharp.wasm',
+  },
+  fsharp: {
+    extensions: ['.fs', '.fsx', '.fsi'],
+    grammarName: 'fsharp',
+    wasmFile: 'tree-sitter-fsharp.wasm',
+  },
+  vue: {
+    extensions: ['.vue'],
+    grammarName: 'vue',
+    wasmFile: 'tree-sitter-vue.wasm',
+  },
+  bash: {
+    extensions: ['.sh', '.bash', '.zsh'],
+    grammarName: 'bash',
+    wasmFile: 'tree-sitter-bash.wasm',
   },
 };
 

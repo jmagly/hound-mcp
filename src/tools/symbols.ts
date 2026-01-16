@@ -72,7 +72,7 @@ export const houndSearchSymbolSchema = {
     },
     language: {
       type: 'string',
-      enum: ['typescript', 'javascript', 'python', 'go'],
+      enum: ['typescript', 'javascript', 'python', 'go', 'rust', 'solidity', 'csharp', 'fsharp', 'vue', 'bash'],
       description: 'Filter by programming language (optional)',
     },
     limit: {
@@ -90,7 +90,7 @@ const inputSchema = z.object({
   name: z.string().min(1),
   kind: SymbolKindSchema.optional(),
   repos: z.string().optional(),
-  language: z.enum(['typescript', 'javascript', 'python', 'go']).optional(),
+  language: z.enum(['typescript', 'javascript', 'python', 'go', 'rust', 'solidity', 'csharp', 'fsharp', 'vue', 'bash']).optional(),
   limit: z.number().min(1).max(100).optional(),
 });
 

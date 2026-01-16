@@ -22,12 +22,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Grammar WASM CDN URLs
+ * Note: Some languages don't have prebuilt WASM on npm - marked as empty
  */
 const GRAMMAR_CDN_URLS: Record<SupportedLanguage, string> = {
   typescript: 'https://cdn.jsdelivr.net/npm/tree-sitter-typescript@0.23.2/tree-sitter-typescript.wasm',
   javascript: 'https://cdn.jsdelivr.net/npm/tree-sitter-javascript@0.23.1/tree-sitter-javascript.wasm',
   python: 'https://cdn.jsdelivr.net/npm/tree-sitter-python@0.23.5/tree-sitter-python.wasm',
   go: 'https://cdn.jsdelivr.net/npm/tree-sitter-go@0.23.4/tree-sitter-go.wasm',
+  rust: 'https://cdn.jsdelivr.net/npm/tree-sitter-rust@0.23.2/tree-sitter-rust.wasm',
+  solidity: 'https://cdn.jsdelivr.net/npm/tree-sitter-solidity@1.2.13/tree-sitter-solidity.wasm',
+  csharp: 'https://cdn.jsdelivr.net/npm/tree-sitter-c-sharp@0.23.1/tree-sitter-c_sharp.wasm',
+  fsharp: '', // No prebuilt WASM available on npm
+  vue: '',    // No prebuilt WASM available on npm
+  bash: 'https://cdn.jsdelivr.net/npm/tree-sitter-bash@0.23.3/tree-sitter-bash.wasm',
 };
 
 /**
@@ -64,6 +71,12 @@ async function downloadGrammar(language: SupportedLanguage): Promise<Uint8Array>
   const config = LANGUAGE_CONFIGS[language];
   const cachePath = join(CACHE_DIR, config.wasmFile);
 
+  // Check if this language has a WASM URL
+  const url = GRAMMAR_CDN_URLS[language];
+  if (!url) {
+    throw new Error(`No prebuilt WASM available for ${language}`);
+  }
+
   // Check cache first
   try {
     const buffer = await fs.readFile(cachePath);
@@ -76,7 +89,6 @@ async function downloadGrammar(language: SupportedLanguage): Promise<Uint8Array>
   await fs.mkdir(CACHE_DIR, { recursive: true });
 
   // Try CDN
-  const url = GRAMMAR_CDN_URLS[language];
   console.error(`[parser] Downloading ${language} grammar from CDN...`);
 
   const response = await fetch(url);
@@ -195,6 +207,163 @@ const GO_PATTERNS: SymbolPattern[] = [
 ];
 
 /**
+ * Tree-sitter queries for Rust
+ */
+const RUST_PATTERNS: SymbolPattern[] = [
+  // Function definitions
+  {
+    query: '(function_item name: (identifier) @name) @func',
+    kind: 'function',
+  },
+  // Struct definitions
+  {
+    query: '(struct_item name: (type_identifier) @name) @struct',
+    kind: 'class',
+  },
+  // Enum definitions
+  {
+    query: '(enum_item name: (type_identifier) @name) @enum',
+    kind: 'type',
+  },
+  // Trait definitions
+  {
+    query: '(trait_item name: (type_identifier) @name) @trait',
+    kind: 'interface',
+  },
+  // Impl blocks (methods)
+  {
+    query: '(impl_item (declaration_list (function_item name: (identifier) @name))) @method',
+    kind: 'method',
+  },
+];
+
+/**
+ * Tree-sitter queries for Solidity
+ */
+const SOLIDITY_PATTERNS: SymbolPattern[] = [
+  // Contract definitions
+  {
+    query: '(contract_declaration name: (identifier) @name) @contract',
+    kind: 'class',
+  },
+  // Interface definitions
+  {
+    query: '(interface_declaration name: (identifier) @name) @interface',
+    kind: 'interface',
+  },
+  // Function definitions
+  {
+    query: '(function_definition name: (identifier) @name) @func',
+    kind: 'function',
+  },
+  // Event definitions
+  {
+    query: '(event_definition name: (identifier) @name) @event',
+    kind: 'type',
+  },
+  // Struct definitions
+  {
+    query: '(struct_declaration name: (identifier) @name) @struct',
+    kind: 'type',
+  },
+  // Modifier definitions
+  {
+    query: '(modifier_definition name: (identifier) @name) @modifier',
+    kind: 'function',
+  },
+];
+
+/**
+ * Tree-sitter queries for C#
+ */
+const CSHARP_PATTERNS: SymbolPattern[] = [
+  // Class declarations
+  {
+    query: '(class_declaration name: (identifier) @name) @class',
+    kind: 'class',
+  },
+  // Interface declarations
+  {
+    query: '(interface_declaration name: (identifier) @name) @interface',
+    kind: 'interface',
+  },
+  // Method declarations
+  {
+    query: '(method_declaration name: (identifier) @name) @method',
+    kind: 'method',
+  },
+  // Struct declarations
+  {
+    query: '(struct_declaration name: (identifier) @name) @struct',
+    kind: 'class',
+  },
+  // Enum declarations
+  {
+    query: '(enum_declaration name: (identifier) @name) @enum',
+    kind: 'type',
+  },
+  // Property declarations
+  {
+    query: '(property_declaration name: (identifier) @name) @property',
+    kind: 'variable',
+  },
+];
+
+/**
+ * Tree-sitter queries for F#
+ */
+const FSHARP_PATTERNS: SymbolPattern[] = [
+  // Function definitions (let bindings)
+  {
+    query: '(function_or_value_defn (value_declaration_left (identifier_pattern (long_identifier (identifier) @name)))) @func',
+    kind: 'function',
+  },
+  // Type definitions
+  {
+    query: '(type_definition (type_name (identifier) @name)) @type',
+    kind: 'type',
+  },
+  // Module definitions
+  {
+    query: '(module_defn (identifier) @name) @module',
+    kind: 'module',
+  },
+];
+
+/**
+ * Tree-sitter queries for Vue (extract script content)
+ * Note: Vue files have script sections - we extract from those
+ */
+const VUE_PATTERNS: SymbolPattern[] = [
+  // Function declarations in script
+  {
+    query: '(function_declaration name: (identifier) @name) @func',
+    kind: 'function',
+  },
+  // Arrow functions
+  {
+    query: '(lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))) @func',
+    kind: 'function',
+  },
+  // Component definition (export default)
+  {
+    query: '(export_statement (object) @component) @export',
+    kind: 'class',
+  },
+];
+
+/**
+ * Tree-sitter queries for Bash/Shell
+ */
+const BASH_PATTERNS: SymbolPattern[] = [
+  // Function definitions
+  {
+    query: '(function_definition name: (word) @name) @func',
+    kind: 'function',
+  },
+];
+
+/**
  * Get query patterns for a language
  */
 function getPatterns(language: SupportedLanguage): SymbolPattern[] {
@@ -206,6 +375,18 @@ function getPatterns(language: SupportedLanguage): SymbolPattern[] {
       return PYTHON_PATTERNS;
     case 'go':
       return GO_PATTERNS;
+    case 'rust':
+      return RUST_PATTERNS;
+    case 'solidity':
+      return SOLIDITY_PATTERNS;
+    case 'csharp':
+      return CSHARP_PATTERNS;
+    case 'fsharp':
+      return FSHARP_PATTERNS;
+    case 'vue':
+      return VUE_PATTERNS;
+    case 'bash':
+      return BASH_PATTERNS;
   }
 }
 
@@ -398,9 +579,26 @@ export function isParserReady(): boolean {
 export async function preloadGrammars(): Promise<void> {
   await initParser();
 
-  const languages: SupportedLanguage[] = ['typescript', 'javascript', 'python', 'go'];
+  const languages: SupportedLanguage[] = [
+    'typescript',
+    'javascript',
+    'python',
+    'go',
+    'rust',
+    'solidity',
+    'csharp',
+    'fsharp',
+    'vue',
+    'bash',
+  ];
 
   for (const lang of languages) {
+    // Skip languages without prebuilt WASM
+    if (!GRAMMAR_CDN_URLS[lang]) {
+      console.error(`[parser] Skipping ${lang} (no prebuilt WASM available)`);
+      continue;
+    }
+
     try {
       await loadLanguage(lang);
       console.error(`[parser] Loaded ${lang} grammar`);

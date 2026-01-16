@@ -34,6 +34,30 @@ describe('getLanguageFromExtension', () => {
     expect(getLanguageFromExtension('.go')).toBe('go');
   });
 
+  it('should return rust for .rs files', () => {
+    expect(getLanguageFromExtension('.rs')).toBe('rust');
+  });
+
+  it('should return solidity for .sol files', () => {
+    expect(getLanguageFromExtension('.sol')).toBe('solidity');
+  });
+
+  it('should return csharp for .cs files', () => {
+    expect(getLanguageFromExtension('.cs')).toBe('csharp');
+  });
+
+  it('should return fsharp for .fs files', () => {
+    expect(getLanguageFromExtension('.fs')).toBe('fsharp');
+  });
+
+  it('should return vue for .vue files', () => {
+    expect(getLanguageFromExtension('.vue')).toBe('vue');
+  });
+
+  it('should return bash for .sh files', () => {
+    expect(getLanguageFromExtension('.sh')).toBe('bash');
+  });
+
   it('should return null for unsupported extensions', () => {
     expect(getLanguageFromExtension('.txt')).toBeNull();
     expect(getLanguageFromExtension('.md')).toBeNull();
@@ -68,5 +92,35 @@ describe('LANGUAGE_CONFIGS', () => {
   it('should have config for go', () => {
     expect(LANGUAGE_CONFIGS.go).toBeDefined();
     expect(LANGUAGE_CONFIGS.go.extensions).toContain('.go');
+  });
+
+  it('should have config for rust', () => {
+    expect(LANGUAGE_CONFIGS.rust).toBeDefined();
+    expect(LANGUAGE_CONFIGS.rust.extensions).toContain('.rs');
+  });
+
+  it('should have config for solidity', () => {
+    expect(LANGUAGE_CONFIGS.solidity).toBeDefined();
+    expect(LANGUAGE_CONFIGS.solidity.extensions).toContain('.sol');
+  });
+
+  it('should have config for csharp', () => {
+    expect(LANGUAGE_CONFIGS.csharp).toBeDefined();
+    expect(LANGUAGE_CONFIGS.csharp.extensions).toContain('.cs');
+  });
+
+  it('should have config for fsharp', () => {
+    expect(LANGUAGE_CONFIGS.fsharp).toBeDefined();
+    expect(LANGUAGE_CONFIGS.fsharp.extensions).toContain('.fs');
+  });
+
+  it('should have config for vue', () => {
+    expect(LANGUAGE_CONFIGS.vue).toBeDefined();
+    expect(LANGUAGE_CONFIGS.vue.extensions).toContain('.vue');
+  });
+
+  it('should have config for bash', () => {
+    expect(LANGUAGE_CONFIGS.bash).toBeDefined();
+    expect(LANGUAGE_CONFIGS.bash.extensions).toContain('.sh');
   });
 });

@@ -61,7 +61,26 @@ export interface FileContent {
 /**
  * Supported file extensions for symbol indexing
  */
-const SUPPORTED_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.py', '.pyw', '.go'];
+const SUPPORTED_EXTENSIONS = [
+  // TypeScript/JavaScript
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  // Python
+  '.py', '.pyw',
+  // Go
+  '.go',
+  // Rust
+  '.rs',
+  // Solidity
+  '.sol',
+  // C#
+  '.cs',
+  // F#
+  '.fs', '.fsx', '.fsi',
+  // Vue
+  '.vue',
+  // Shell
+  '.sh', '.bash', '.zsh',
+];
 
 /**
  * Gitea API Client
