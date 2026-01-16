@@ -2,8 +2,8 @@
  * Tests for hound_search_symbol tool
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { houndSearchSymbol, getSymbolIndex } from './symbols.js';
+import { describe, it, expect, vi } from 'vitest';
+import { houndSearchSymbol } from './symbols.js';
 
 // Mock the symbol index for testing
 vi.mock('../indexer/index.js', () => {

@@ -2,7 +2,7 @@
  * Tests for hound_index_repos tool
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { houndIndexRepos } from './index-repos.js';
 
 // Mock the gitea client
@@ -129,7 +129,7 @@ describe('houndIndexRepos', () => {
       vi.mocked(giteaClient.isConfigured).mockReturnValue(true);
       vi.mocked(giteaClient.getRepoFiles).mockResolvedValue([]);
 
-      const result = await houndIndexRepos({ repos: 'owner/repo', branch: 'develop' });
+      await houndIndexRepos({ repos: 'owner/repo', branch: 'develop' });
 
       expect(giteaClient.getRepoFiles).toHaveBeenCalledWith('owner', 'repo', 'develop');
     });
