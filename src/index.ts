@@ -23,6 +23,7 @@ import { houndRepos, houndReposSchema } from './tools/repos.js';
 import { houndFileContext, houndFileContextSchema } from './tools/context.js';
 import { houndRepoStats, houndRepoStatsSchema } from './tools/stats.js';
 import { houndSearchSymbol, houndSearchSymbolSchema } from './tools/symbols.js';
+import { houndIndexRepos, houndIndexReposSchema } from './tools/index-repos.js';
 import {
   validateClientCredentials,
   generateAccessToken,
@@ -104,6 +105,12 @@ function createMcpServer(): Server {
             'Search for code symbols (functions, classes, methods, interfaces, types) by name using tree-sitter AST parsing. Supports wildcards (* and ?).',
           inputSchema: houndSearchSymbolSchema,
         },
+        {
+          name: 'hound_index_repos',
+          description:
+            'Index repositories for symbol search. Fetches source files from Gitea and extracts symbols using tree-sitter. Run this before using hound_search_symbol to populate the index.',
+          inputSchema: houndIndexReposSchema,
+        },
       ],
     };
   });
@@ -124,6 +131,8 @@ function createMcpServer(): Server {
           return await houndRepoStats(args);
         case 'hound_search_symbol':
           return await houndSearchSymbol(args);
+        case 'hound_index_repos':
+          return await houndIndexRepos(args);
         default:
           return {
             content: [
@@ -753,7 +762,7 @@ async function startHttpServer(port: number) {
         const signature = req.headers['x-gitea-signature'] as string | undefined;
 
         console.error(`[webhook] Gitea event: ${eventType}`);
-        const result = handleGiteaWebhook(eventType, signature, body);
+        const result = await handleGiteaWebhook(eventType, signature, body);
 
         res.writeHead(result.success ? 200 : 400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));

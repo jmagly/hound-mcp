@@ -1,11 +1,14 @@
 /**
  * Gitea Webhook Handler
  *
- * Handles Gitea webhook events to auto-sync Hound index when repos are created/deleted.
+ * Handles Gitea webhook events to auto-sync Hound index when repos are created/deleted,
+ * and auto-index symbols when code is pushed.
  */
 
 import { execSync } from 'node:child_process';
 import { createHmac } from 'node:crypto';
+import { giteaClient } from './clients/gitea.js';
+import { getSymbolIndex } from './tools/symbols.js';
 
 /**
  * Configuration from environment
@@ -19,9 +22,11 @@ const GITEA_TOKEN = process.env.GITEA_TOKEN || '';
  */
 interface GiteaWebhookPayload {
   action?: string; // 'created', 'deleted' for repository events
+  ref?: string; // refs/heads/main for push events
   repository?: {
     full_name: string;
     name: string;
+    default_branch?: string;
     owner: {
       login: string;
     };
@@ -52,6 +57,45 @@ function verifySignature(payload: string, signature: string | undefined): boolea
 
   const expected = createHmac('sha256', WEBHOOK_SECRET).update(payload).digest('hex');
   return signature === expected || signature === `sha256=${expected}`;
+}
+
+/**
+ * Index a repository's symbols
+ */
+async function indexRepoSymbols(repoName: string, branch: string): Promise<{ success: boolean; message: string }> {
+  try {
+    console.error(`[webhook] Indexing symbols for ${repoName}...`);
+
+    if (!giteaClient.isConfigured()) {
+      console.error('[webhook] Gitea not configured, skipping symbol indexing');
+      return { success: true, message: 'Skipped (Gitea not configured)' };
+    }
+
+    const [owner, repo] = repoName.split('/');
+    if (!owner || !repo) {
+      return { success: false, message: `Invalid repo name: ${repoName}` };
+    }
+
+    // Fetch files from Gitea
+    const files = await giteaClient.getRepoFiles(owner, repo, branch);
+
+    if (files.length === 0) {
+      console.error(`[webhook] No source files found in ${repoName}`);
+      return { success: true, message: 'No source files to index' };
+    }
+
+    // Index files
+    const index = getSymbolIndex();
+    await index.initialize();
+    const result = await index.indexRepo(repoName, files);
+
+    console.error(`[webhook] Indexed ${result.symbols} symbols from ${result.files} files in ${repoName}`);
+    return { success: true, message: `Indexed ${result.symbols} symbols from ${result.files} files` };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[webhook] Failed to index ${repoName}: ${message}`);
+    return { success: false, message: `Failed to index: ${message}` };
+  }
 }
 
 /**
@@ -91,11 +135,11 @@ function regenerateConfig(): { success: boolean; message: string } {
 /**
  * Handle Gitea webhook request
  */
-export function handleGiteaWebhook(
+export async function handleGiteaWebhook(
   eventType: string | undefined,
   signature: string | undefined,
   payload: string
-): WebhookResponse {
+): Promise<WebhookResponse> {
   // Verify signature if configured
   if (!verifySignature(payload, signature)) {
     console.error('[webhook] Invalid signature');
@@ -127,6 +171,26 @@ export function handleGiteaWebhook(
       console.error(`[webhook] Repo deleted: ${repoName}`);
       const result = regenerateConfig();
       return { ...result, action: `removed deleted repo: ${repoName}` };
+    }
+  }
+
+  // Handle push events - re-index symbols for the repository
+  if (eventType === 'push') {
+    const repoName = data.repository?.full_name || 'unknown';
+    const branch = data.ref?.replace('refs/heads/', '') || data.repository?.default_branch || 'main';
+
+    // Only index pushes to main/master branch
+    if (branch === 'main' || branch === 'master') {
+      console.error(`[webhook] Push to ${repoName}:${branch}, re-indexing symbols...`);
+      const result = await indexRepoSymbols(repoName, branch);
+      return { ...result, action: `re-indexed symbols for ${repoName}` };
+    } else {
+      console.error(`[webhook] Push to ${repoName}:${branch}, skipping (not main branch)`);
+      return {
+        success: true,
+        message: 'Skipped non-main branch',
+        action: `skipped ${repoName}:${branch}`,
+      };
     }
   }
 
