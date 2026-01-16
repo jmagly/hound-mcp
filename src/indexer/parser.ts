@@ -129,9 +129,9 @@ interface SymbolPattern {
 }
 
 /**
- * Tree-sitter queries for TypeScript/JavaScript
+ * Tree-sitter queries for JavaScript (subset that works in JS grammar)
  */
-const TS_JS_PATTERNS: SymbolPattern[] = [
+const JS_PATTERNS: SymbolPattern[] = [
   // Function declarations
   {
     query: '(function_declaration name: (identifier) @name) @func',
@@ -142,9 +142,9 @@ const TS_JS_PATTERNS: SymbolPattern[] = [
     query: '(lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))) @func',
     kind: 'function',
   },
-  // Class declarations
+  // Class declarations (JS uses identifier, not type_identifier)
   {
-    query: '(class_declaration name: (type_identifier) @name) @class',
+    query: '(class_declaration name: (identifier) @name) @class',
     kind: 'class',
   },
   // Method definitions
@@ -152,14 +152,50 @@ const TS_JS_PATTERNS: SymbolPattern[] = [
     query: '(method_definition name: (property_identifier) @name) @method',
     kind: 'method',
   },
-  // Interface declarations (TypeScript)
+];
+
+/**
+ * Tree-sitter queries for TypeScript (includes TS-specific nodes)
+ */
+const TS_PATTERNS: SymbolPattern[] = [
+  // Function declarations
+  {
+    query: '(function_declaration name: (identifier) @name) @func',
+    kind: 'function',
+  },
+  // Arrow functions assigned to const
+  {
+    query: '(lexical_declaration (variable_declarator name: (identifier) @name value: (arrow_function))) @func',
+    kind: 'function',
+  },
+  // Class declarations (TS uses type_identifier)
+  {
+    query: '(class_declaration name: (type_identifier) @name) @class',
+    kind: 'class',
+  },
+  // Abstract class declarations
+  {
+    query: '(abstract_class_declaration name: (type_identifier) @name) @class',
+    kind: 'class',
+  },
+  // Method definitions
+  {
+    query: '(method_definition name: (property_identifier) @name) @method',
+    kind: 'method',
+  },
+  // Interface declarations
   {
     query: '(interface_declaration name: (type_identifier) @name) @interface',
     kind: 'interface',
   },
-  // Type alias declarations (TypeScript)
+  // Type alias declarations
   {
     query: '(type_alias_declaration name: (type_identifier) @name) @type',
+    kind: 'type',
+  },
+  // Enum declarations
+  {
+    query: '(enum_declaration name: (identifier) @name) @enum',
     kind: 'type',
   },
 ];
@@ -369,8 +405,9 @@ const BASH_PATTERNS: SymbolPattern[] = [
 function getPatterns(language: SupportedLanguage): SymbolPattern[] {
   switch (language) {
     case 'typescript':
+      return TS_PATTERNS;
     case 'javascript':
-      return TS_JS_PATTERNS;
+      return JS_PATTERNS;
     case 'python':
       return PYTHON_PATTERNS;
     case 'go':
