@@ -22,8 +22,10 @@ import { houndSearch, houndSearchSchema } from './tools/search.js';
 import { houndRepos, houndReposSchema } from './tools/repos.js';
 import { houndFileContext, houndFileContextSchema } from './tools/context.js';
 import { houndRepoStats, houndRepoStatsSchema } from './tools/stats.js';
-import { houndSearchSymbol, houndSearchSymbolSchema } from './tools/symbols.js';
+import { houndSearchSymbol, houndSearchSymbolSchema, getSymbolIndex } from './tools/symbols.js';
 import { houndIndexRepos, houndIndexReposSchema } from './tools/index-repos.js';
+import { houndClient } from './clients/hound.js';
+import { giteaClient } from './clients/gitea.js';
 import {
   validateClientCredentials,
   generateAccessToken,
@@ -805,6 +807,68 @@ async function startHttpServer(port: number) {
 }
 
 /**
+ * Index all repositories on startup (background task)
+ */
+async function indexAllReposOnStartup(): Promise<void> {
+  // Check if Gitea is configured
+  if (!giteaClient.isConfigured()) {
+    console.error('[startup] Gitea not configured, skipping symbol indexing');
+    console.error('[startup] Set GITEA_URL and GITEA_TOKEN to enable automatic indexing');
+    return;
+  }
+
+  try {
+    // Get all repos from Hound
+    console.error('[startup] Fetching repository list from Hound...');
+    const repos = await houndClient.listRepos();
+
+    if (repos.count === 0) {
+      console.error('[startup] No repositories found in Hound');
+      return;
+    }
+
+    console.error(`[startup] Starting symbol indexing for ${repos.count} repositories...`);
+
+    const index = getSymbolIndex();
+    await index.initialize();
+
+    let indexed = 0;
+    let failed = 0;
+    let totalSymbols = 0;
+
+    for (const repo of repos.repos) {
+      try {
+        const [owner, repoName] = repo.name.split('/');
+        if (!owner || !repoName) {
+          console.error(`[startup] Invalid repo name: ${repo.name}`);
+          failed++;
+          continue;
+        }
+
+        const files = await giteaClient.getRepoFiles(owner, repoName, 'main');
+        if (files.length > 0) {
+          const result = await index.indexRepo(repo.name, files);
+          totalSymbols += result.symbols;
+          indexed++;
+          console.error(`[startup] Indexed ${repo.name}: ${result.symbols} symbols`);
+        } else {
+          console.error(`[startup] Skipped ${repo.name}: no source files`);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        console.error(`[startup] Failed ${repo.name}: ${msg}`);
+        failed++;
+      }
+    }
+
+    console.error(`[startup] Symbol indexing complete: ${indexed} repos, ${totalSymbols} symbols (${failed} failed)`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    console.error(`[startup] Symbol indexing failed: ${msg}`);
+  }
+}
+
+/**
  * Main entry point
  */
 async function main() {
@@ -812,6 +876,10 @@ async function main() {
 
   if (mode === 'http') {
     await startHttpServer(port);
+    // Start background indexing after server is up
+    indexAllReposOnStartup().catch((err) => {
+      console.error('[startup] Background indexing error:', err);
+    });
   } else {
     await startStdioServer();
   }
