@@ -24,6 +24,7 @@ import { houndFileContext, houndFileContextSchema } from './tools/context.js';
 import { houndRepoStats, houndRepoStatsSchema } from './tools/stats.js';
 import { houndSearchSymbol, houndSearchSymbolSchema, getSymbolIndex } from './tools/symbols.js';
 import { houndIndexRepos, houndIndexReposSchema } from './tools/index-repos.js';
+import { houndHelp, houndHelpSchema } from './tools/help.js';
 import { houndClient } from './clients/hound.js';
 import { giteaClient } from './clients/gitea.js';
 import {
@@ -113,6 +114,12 @@ function createMcpServer(): Server {
             'Index repositories for symbol search. Fetches source files from Gitea and extracts symbols using tree-sitter. Run this before using hound_search_symbol to populate the index.',
           inputSchema: houndIndexReposSchema,
         },
+        {
+          name: 'hound_help',
+          description:
+            'Get comprehensive documentation and usage guidance for CodeHound MCP tools. Call with no arguments for full docs, or specify a topic: overview, search, symbols, context, repos, stats, tips.',
+          inputSchema: houndHelpSchema,
+        },
       ],
     };
   });
@@ -135,6 +142,8 @@ function createMcpServer(): Server {
           return await houndSearchSymbol(args);
         case 'hound_index_repos':
           return await houndIndexRepos(args);
+        case 'hound_help':
+          return await houndHelp(args);
         default:
           return {
             content: [

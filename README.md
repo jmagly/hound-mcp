@@ -12,10 +12,15 @@ Multi-modal code search MCP server combining [Hound](https://github.com/hound-se
 - **hound_file_context** - Get extended context around a code match with Gitea/GitHub deep links
 - **hound_repo_stats** - Get repository statistics including file counts, line counts, and language breakdown
 
-### Symbol Search (Coming Soon)
-- **hound_search_symbol** - Find functions, classes, methods, and interfaces by name
-- Tree-sitter-based parsing for TypeScript, JavaScript, Python, Go
-- Symbol type filtering and scope-aware results
+### Symbol Search (Tree-sitter)
+- **hound_search_symbol** - Find functions, classes, methods, interfaces, and types by name with wildcards
+- **hound_index_repos** - Manually trigger symbol indexing (auto-indexes on startup)
+- Tree-sitter AST parsing for accurate symbol extraction
+- Supported languages: TypeScript, JavaScript, Python, Go, Rust, Solidity, C#
+- Symbol type filtering (function, class, method, interface, type)
+
+### Documentation
+- **hound_help** - Comprehensive documentation and usage guidance for AI agents
 
 ### Future: Semantic Search
 - Embedding-based similarity search (tracked in [#17](https://github.com/jmagly/codehound-mcp/issues/17))
@@ -173,6 +178,62 @@ Get extended context around a specific line.
 | `file` | string | Yes | - | File path (e.g., `src/index.ts`) |
 | `line` | number | Yes | - | Center line number |
 | `context` | number | No | `10` | Lines before/after (max 50) |
+
+### hound_repo_stats
+
+Get repository statistics including file counts, line counts, and language breakdown.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `repo` | string | No | `*` | Repository name or `*` for all |
+
+### hound_search_symbol
+
+Search for code symbols (functions, classes, methods, interfaces, types) using tree-sitter AST parsing.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Symbol name pattern (supports `*` wildcards) |
+| `kind` | string | No | - | Filter: `function`, `class`, `method`, `interface`, `type` |
+| `language` | string | No | - | Filter: `typescript`, `javascript`, `python`, `go`, `rust`, `solidity`, `csharp` |
+| `repo` | string | No | - | Filter by repository name |
+| `limit` | number | No | `50` | Max results (1-500) |
+
+**Wildcard patterns:**
+- `validate*` - Starts with "validate"
+- `*Handler` - Ends with "Handler"
+- `*User*` - Contains "User"
+
+**Symbol kinds by language:**
+
+| Language | Kinds |
+|----------|-------|
+| TypeScript | function, class, method, interface, type |
+| JavaScript | function, class, method |
+| Python | function, class, method, variable |
+| Go | function, method, type |
+| Rust | function, struct, impl, trait |
+| Solidity | function, contract, event |
+| C# | class, method, interface |
+
+### hound_index_repos
+
+Manually trigger symbol indexing. Symbols are auto-indexed on server startup; use this for manual re-indexing.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `repos` | string | No | - | Comma-separated repos or empty for all |
+| `branch` | string | No | `main` | Branch to index |
+
+### hound_help
+
+Get comprehensive documentation and usage guidance for AI agents.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `topic` | string | No | - | Topic: `overview`, `search`, `symbols`, `context`, `repos`, `stats`, `tips` |
+
+Call with no arguments for full documentation.
 
 ## Deployment
 
