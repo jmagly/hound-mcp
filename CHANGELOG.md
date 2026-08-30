@@ -7,11 +7,15 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
+## [2026.8.32] - 2026-08-29
+
+### Fixed
+- Use job-level containers for verification and npm publication so the runner does not depend on invalid nested Docker bind mounts.
+
 ## [2026.8.31] - 2026-08-29
 
 ### Fixed
-- Install GnuPG explicitly in the digest-pinned verification container before validating signed tags.
-- Run release containers as the runner user so generated workspace files retain usable ownership.
+- Attempted signed-tag verification through a nested container; the host Docker daemon could not bind the job-container workspace, so this candidate was not published.
 
 ## [2026.8.30] - 2026-08-29
 
@@ -61,7 +65,8 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.31...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.32...HEAD
+[2026.8.32]: https://github.com/jmagly/hound-mcp/compare/v2026.8.31...v2026.8.32
 [2026.8.31]: https://github.com/jmagly/hound-mcp/compare/v2026.8.30...v2026.8.31
 [2026.8.30]: https://github.com/jmagly/hound-mcp/compare/v2026.8.29...v2026.8.30
 [2026.8.29]: https://github.com/jmagly/hound-mcp/releases/tag/v2026.8.29
