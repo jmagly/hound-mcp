@@ -11,6 +11,7 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ### Fixed
 - Run signed-tag verification on the Gitea runner host where GnuPG is available, while retaining the digest-pinned Node container for package checks.
+- Run release containers as the runner user so generated workspace files retain usable ownership.
 
 ## [2026.8.29] - 2026-08-29
 

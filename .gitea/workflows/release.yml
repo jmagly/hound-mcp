@@ -23,7 +23,8 @@ jobs:
         run: |
           tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          docker run --rm --env TAG_VERSION --volume "$PWD:/work" --workdir /work \
+          docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp --env TAG_VERSION \
+            --volume "$PWD:/work" --workdir /work \
             node:24@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb \
             bash -c 'test "$TAG_VERSION" = "$(node -p "require('"'"'./package.json'"'"').version")" && npm ci && npm run check'
   publish:
@@ -52,7 +53,8 @@ jobs:
           echo "name=$CHANNEL" >> "$GITHUB_OUTPUT"
       - name: Publish internal npm package
         run: |
-          docker run --rm --env NODE_AUTH_TOKEN --env NPM_REGISTRY \
+          docker run --rm --user "$(id -u):$(id -g)" --env HOME=/tmp \
+            --env NODE_AUTH_TOKEN --env NPM_REGISTRY \
             --volume "$PWD:/work" --workdir /work \
             node:24@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb \
             bash -c 'npm ci && npm run build && printf "%s\n" "//git.integrolabs.net/api/packages/roctinam/npm/:_authToken=\${NODE_AUTH_TOKEN}" > /tmp/npmrc && npm publish --userconfig /tmp/npmrc --registry "$NPM_REGISTRY" --tag "${{ steps.channel.outputs.name }}"'
