@@ -29,6 +29,9 @@ nightly versions publish with `nightly`.
 2. Commit and push the release preparation. Wait for Gitea and GitHub CI.
 3. Run `tools/release/cut-tag.sh VERSION`. The wrapper refuses a dirty tree,
    mismatched version, missing changelog entry, failed build, or unsigned tag.
+   It requires the installed `hound-mcp-release-gpg` OpenBao-backed signer (or
+   an explicit `HOUND_MCP_RELEASE_GPG_PROGRAM`) and accepts only fingerprint
+   `AA2AEF3332C100FF7DD9AFC7CA0A4B2C2DE0F6BF`.
 4. Push the verified tag to both authorities:
 
    ```bash

@@ -22,7 +22,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - name: Verify signed tag and version
         run: |
-          git verify-tag "${GITHUB_REF#refs/tags/}"
+          tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
           test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
       - run: npm ci && npm run check
       - name: Select dist-tag

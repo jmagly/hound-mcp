@@ -12,6 +12,11 @@ grep -Fq "## [$VERSION]" CHANGELOG.md || { echo "CHANGELOG.md has no $VERSION en
 [[ -z "$(git status --porcelain)" ]] || { echo 'worktree must be clean before tagging' >&2; exit 1; }
 npm ci
 npm run check
-git tag -s "v$VERSION" -m "Release v$VERSION"
-git verify-tag "v$VERSION"
+SIGNER="${HOUND_MCP_RELEASE_GPG_PROGRAM:-$(command -v hound-mcp-release-gpg || true)}"
+[[ -n "$SIGNER" && -x "$SIGNER" ]] || {
+  echo 'Hound MCP release signer is unavailable; set HOUND_MCP_RELEASE_GPG_PROGRAM' >&2
+  exit 1
+}
+git -c gpg.program="$SIGNER" tag -u AA2AEF3332C100FF7DD9AFC7CA0A4B2C2DE0F6BF -s "v$VERSION" -m "Release v$VERSION"
+tools/ci/verify-signed-tag.sh "v$VERSION"
 echo "Created and verified v$VERSION. Review it, then push the same tag to origin and github."

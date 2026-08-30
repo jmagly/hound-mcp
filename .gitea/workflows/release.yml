@@ -24,7 +24,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: Verify release input
         run: |
-          git verify-tag "${GITHUB_REF#refs/tags/}"
+          tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
           test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
           npm ci
           npm run check
