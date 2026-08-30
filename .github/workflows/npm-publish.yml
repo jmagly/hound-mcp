@@ -20,7 +20,6 @@ jobs:
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org
-          cache: npm
       - name: Verify signed tag and version
         run: |
           git verify-tag "${GITHUB_REF#refs/tags/}"
@@ -46,4 +45,3 @@ jobs:
             sleep 10
           done
           exit 1
-

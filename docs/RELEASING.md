@@ -8,12 +8,18 @@ nightly versions publish with `nightly`.
 
 1. Rename both forge repositories to `hound-mcp` and retain redirects from
    `mcp-hound` where the forge supports them.
-2. On npmjs.org, configure a GitHub Actions trusted publisher for
+2. Bootstrap the first public version with an operator-authenticated npm
+   publication using account 2FA (or a short-lived granular token with bypass
+   2FA). A trusted publisher cannot be configured until the package exists.
+   Inspect the exact tarball from `npm pack` before this one-time bootstrap.
+3. On npmjs.org, configure a GitHub Actions trusted publisher for
    `@jmagly/hound-mcp`, repository `jmagly/hound-mcp`, workflow
    `npm-publish.yml`, environment `npm`. Do not create an `NPM_TOKEN`.
-3. Protect the GitHub `npm` environment and `main` branch. Require CI and an
+4. Protect the GitHub `npm` environment and `main` branch. Require CI and an
    operator approval for the environment.
-4. Keep the Gitea registry credentials in OpenBao-backed repository secrets.
+5. Keep the Gitea registry credentials behind the scoped `ci-hound-mcp`
+   AppRole. Gitea stores only `VAULT_CI_ROLE_ID` and
+   `VAULT_CI_SECRET_ID`; publish credentials are fetched at runtime.
    Gitea owns the internal npm/container leg; GitHub OIDC owns npmjs.org.
 
 ## Release gates
@@ -37,4 +43,3 @@ nightly versions publish with `nightly`.
 Never delete or move a published npm version. If a post-tag release fails,
 correct it with a new patch version. Never use a prerelease dist-tag for a
 stable version or move `latest` from a stable version to a prerelease.
-
