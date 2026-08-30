@@ -7,13 +7,19 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
-## [2026.8.35] - 2026-08-29
+## [2026.8.36] - 2026-08-29
 
 ### Fixed
 - Use job-level containers for verification and npm publication so the runner does not depend on invalid nested Docker bind mounts.
 - Scope Git's safe-directory exception to the checked-out workspace during containerized tag verification.
 - Restore the annotated tag object after checkout before verifying its signature.
 - Fail closed during credential retrieval instead of silently skipping publish jobs through an unsupported job-level secrets expression.
+- Trust the public Integro Labs G2 CA bundle for authenticated OpenBao access from minimal release containers.
+
+## [2026.8.35] - 2026-08-29
+
+### Fixed
+- Enabled fail-closed publication jobs; the minimal npm job correctly rejected the untrusted internal CA until its public trust bundle was configured, so this candidate was not published.
 
 ## [2026.8.34] - 2026-08-29
 
@@ -83,7 +89,8 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.35...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.36...HEAD
+[2026.8.36]: https://github.com/jmagly/hound-mcp/compare/v2026.8.35...v2026.8.36
 [2026.8.35]: https://github.com/jmagly/hound-mcp/compare/v2026.8.34...v2026.8.35
 [2026.8.34]: https://github.com/jmagly/hound-mcp/compare/v2026.8.33...v2026.8.34
 [2026.8.33]: https://github.com/jmagly/hound-mcp/compare/v2026.8.32...v2026.8.33

@@ -20,6 +20,11 @@ fi
 for name in VAULT_ADDR VAULT_CI_ROLE_ID VAULT_CI_SECRET_ID GITHUB_ENV; do
   [[ -n "${!name:-}" ]] || { echo "$name is required" >&2; exit 1; }
 done
+VAULT_CURL_ARGS=()
+if [[ -n "${VAULT_CACERT:-}" ]]; then
+  [[ -r "$VAULT_CACERT" ]] || { echo 'VAULT_CACERT must be readable' >&2; exit 1; }
+  VAULT_CURL_ARGS+=(--cacert "$VAULT_CACERT")
+fi
 resolve() {
   local value="$1" name
   if [[ "$value" =~ ^\$\{([A-Z_][A-Z0-9_]*)\}$ ]]; then
@@ -32,9 +37,9 @@ resolve() {
 }
 token="$(printf '%s\n%s\n' "$VAULT_CI_ROLE_ID" "$VAULT_CI_SECRET_ID" |
   jq -Rn '{role_id:input,secret_id:input}' |
-  curl -fsS --max-time 20 -X POST --data @- "$VAULT_ADDR/v1/auth/approle/login" |
+  curl -fsS --max-time 20 "${VAULT_CURL_ARGS[@]}" -X POST --data @- "$VAULT_ADDR/v1/auth/approle/login" |
   jq -er '.auth.client_token')"
-trap 'curl -fsS --max-time 10 --config /dev/fd/3 -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" 3<<<"header = \"X-Vault-Token: $token\"" >/dev/null 2>&1 || true' EXIT
+trap 'curl -fsS --max-time 10 "${VAULT_CURL_ARGS[@]}" --config /dev/fd/3 -X POST "$VAULT_ADDR/v1/auth/token/revoke-self" 3<<<"header = \"X-Vault-Token: $token\"" >/dev/null 2>&1 || true' EXIT
 echo "::add-mask::$token"
 while read -r kind name path field extra; do
   [[ -z "${kind:-}" || "$kind" == \#* ]] && continue
@@ -42,7 +47,7 @@ while read -r kind name path field extra; do
   path="$(resolve "$path")"
   field="$(resolve "$field")"
   [[ "$path" == */data/* ]] || path="${path%%/*}/data/${path#*/}"
-  value="$(curl -fsS --max-time 20 --config /dev/fd/3 "$VAULT_ADDR/v1/$path" 3<<<"header = \"X-Vault-Token: $token\"" | jq -er --arg field "$field" '.data.data[$field]')"
+  value="$(curl -fsS --max-time 20 "${VAULT_CURL_ARGS[@]}" --config /dev/fd/3 "$VAULT_ADDR/v1/$path" 3<<<"header = \"X-Vault-Token: $token\"" | jq -er --arg field "$field" '.data.data[$field]')"
   echo "::add-mask::$value"
   {
     echo "$name<<__VAULT__"
@@ -51,4 +56,3 @@ while read -r kind name path field extra; do
   } >> "$GITHUB_ENV"
   unset value
 done < "$SPEC"
-

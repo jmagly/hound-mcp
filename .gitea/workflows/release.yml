@@ -49,6 +49,7 @@ jobs:
       - name: Fetch scoped publish credentials
         env:
           VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_CACERT: ci/integrolabs-g2-ca-bundle.pem
           VAULT_CI_ROLE_ID: ${{ secrets.VAULT_CI_ROLE_ID }}
           VAULT_CI_SECRET_ID: ${{ secrets.VAULT_CI_SECRET_ID }}
           REGISTRY_CREDENTIAL_VAULT_PATH: ${{ vars.REGISTRY_CREDENTIAL_VAULT_PATH }}
@@ -78,6 +79,7 @@ jobs:
       - name: Fetch scoped publish credentials
         env:
           VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_CACERT: ci/integrolabs-g2-ca-bundle.pem
           VAULT_CI_ROLE_ID: ${{ secrets.VAULT_CI_ROLE_ID }}
           VAULT_CI_SECRET_ID: ${{ secrets.VAULT_CI_SECRET_ID }}
           REGISTRY_CREDENTIAL_VAULT_PATH: ${{ vars.REGISTRY_CREDENTIAL_VAULT_PATH }}
