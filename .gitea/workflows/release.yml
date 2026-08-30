@@ -27,7 +27,9 @@ jobs:
         run: |
           apt-get update
           apt-get install --yes --no-install-recommends gnupg
-          tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
+          RELEASE_TAG="${GITHUB_REF#refs/tags/}"
+          git fetch --force origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          tools/ci/verify-signed-tag.sh "$RELEASE_TAG"
           test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
           npm ci
           npm run check
