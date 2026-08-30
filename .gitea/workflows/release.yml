@@ -15,10 +15,6 @@ env:
 jobs:
   verify:
     runs-on: teroknor
-    container: node:24@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb # node 24.15.0
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -26,9 +22,10 @@ jobs:
       - name: Verify release input
         run: |
           tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
-          test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
-          npm ci
-          npm run check
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          docker run --rm --env TAG_VERSION --volume "$PWD:/work" --workdir /work \
+            node:24@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb \
+            bash -c 'test "$TAG_VERSION" = "$(node -p "require('"'"'./package.json'"'"').version")" && npm ci && npm run check'
   publish:
     runs-on: teroknor
     needs: verify

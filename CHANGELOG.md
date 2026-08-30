@@ -7,6 +7,11 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
+## [2026.8.30] - 2026-08-29
+
+### Fixed
+- Run signed-tag verification on the Gitea runner host where GnuPG is available, while retaining the digest-pinned Node container for package checks.
+
 ## [2026.8.29] - 2026-08-29
 
 ### Changed
@@ -50,6 +55,7 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.29...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.30...HEAD
+[2026.8.30]: https://github.com/jmagly/hound-mcp/compare/v2026.8.29...v2026.8.30
 [2026.8.29]: https://github.com/jmagly/hound-mcp/releases/tag/v2026.8.29
 [0.1.0]: https://github.com/jmagly/hound-mcp/releases/tag/v0.1.0
