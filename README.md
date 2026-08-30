@@ -1,4 +1,4 @@
-# CodeHound MCP
+# Hound MCP
 
 Multi-modal code search MCP server combining [Hound](https://github.com/hound-search/hound) text search, tree-sitter symbol extraction, and future semantic search. Exposes powerful code search capabilities to Claude Code and other MCP-compatible AI agents.
 
@@ -23,7 +23,7 @@ Multi-modal code search MCP server combining [Hound](https://github.com/hound-se
 - **hound_help** - Comprehensive documentation and usage guidance for AI agents
 
 ### Future: Semantic Search
-- Embedding-based similarity search (tracked in [#17](https://github.com/jmagly/codehound-mcp/issues/17))
+- Embedding-based similarity search (tracked in [#17](https://github.com/jmagly/hound-mcp/issues/17))
 
 ### Infrastructure
 - **Auto-indexing** - Webhook support for automatic Hound re-indexing when repos change
@@ -39,11 +39,11 @@ Multi-modal code search MCP server combining [Hound](https://github.com/hound-se
 
 ```bash
 # From npm (when published)
-npm install -g @jmagly/codehound-mcp
+npm install -g @jmagly/hound-mcp
 
 # From source
-git clone https://github.com/jmagly/codehound-mcp.git
-cd codehound-mcp
+git clone https://github.com/jmagly/hound-mcp.git
+cd hound-mcp
 npm install
 npm run build
 ```
@@ -78,7 +78,7 @@ Add to `~/.claude/settings.json`:
   "mcpServers": {
     "codehound": {
       "command": "node",
-      "args": ["/path/to/codehound-mcp/dist/index.js"],
+      "args": ["/path/to/hound-mcp/dist/index.js"],
       "env": {
         "HOUND_URL": "http://localhost:6080"
       }
@@ -94,7 +94,7 @@ Or using npx (when published):
   "mcpServers": {
     "codehound": {
       "command": "npx",
-      "args": ["-y", "@jmagly/codehound-mcp"],
+      "args": ["-y", "@jmagly/hound-mcp"],
       "env": {
         "HOUND_URL": "http://localhost:6080"
       }
@@ -253,7 +253,7 @@ Add to `~/.claude.json`:
   "mcpServers": {
     "hound": {
       "command": "node",
-      "args": ["/path/to/codehound-mcp/dist/index.js"],
+      "args": ["/path/to/hound-mcp/dist/index.js"],
       "env": {
         "HOUND_URL": "http://localhost:6080"
       }
@@ -268,17 +268,17 @@ CodeHound provides Docker images for containerized deployment:
 
 ```bash
 # Build production image
-docker compose build codehound-mcp
+docker compose build hound-mcp
 
 # Run production container
-docker compose up -d codehound-mcp
+docker compose up -d hound-mcp
 
 # Run with environment variables
 docker run -d \
   -p 3100:3000 \
   -e HOUND_URL=http://hound:6080 \
   -e GITHUB_TOKEN=your_token \
-  jmagly/codehound-mcp:latest
+  jmagly/hound-mcp:latest
 
 # Development with live reload
 docker compose --profile dev up dev
@@ -297,24 +297,24 @@ For remote deployment, CodeHound provides OAuth2 authentication with:
 
 ```bash
 # Clone and build
-git clone https://github.com/jmagly/codehound-mcp.git
-cd codehound-mcp
+git clone https://github.com/jmagly/hound-mcp.git
+cd hound-mcp
 npm install
 npm run build
 
 # Create directories
-sudo mkdir -p /opt/codehound-mcp /etc/codehound-mcp
+sudo mkdir -p /opt/hound-mcp /etc/hound-mcp
 
 # Copy files
-sudo cp -r dist package.json /opt/codehound-mcp/
-sudo cp -r node_modules /opt/codehound-mcp/
+sudo cp -r dist package.json /opt/hound-mcp/
+sudo cp -r node_modules /opt/hound-mcp/
 
 # Create environment file
-sudo tee /etc/codehound-mcp/env << 'EOF'
+sudo tee /etc/hound-mcp/env << 'EOF'
 HOUND_URL=https://your-hound-instance.example.com
 GITEA_URL=https://your-gitea-instance.example.com
 GITEA_TOKEN=your-gitea-api-token
-MCP_CREDENTIALS_FILE=/etc/codehound-mcp/clients.json
+MCP_CREDENTIALS_FILE=/etc/hound-mcp/clients.json
 
 # Auto-indexing (optional)
 HOUND_CONFIG_DIR=/path/to/hound/config
@@ -322,12 +322,12 @@ HOUND_CONFIG_DIR=/path/to/hound/config
 EOF
 
 # Create empty clients file
-echo '[]' | sudo tee /etc/codehound-mcp/clients.json
+echo '[]' | sudo tee /etc/hound-mcp/clients.json
 ```
 
 #### 2. Systemd Service
 
-Create `/etc/systemd/system/codehound-mcp.service`:
+Create `/etc/systemd/system/hound-mcp.service`:
 
 ```ini
 [Unit]
@@ -336,14 +336,14 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/codehound-mcp
-ExecStart=/usr/bin/node /opt/codehound-mcp/dist/index.js --http --port 3100
+WorkingDirectory=/opt/hound-mcp
+ExecStart=/usr/bin/node /opt/hound-mcp/dist/index.js --http --port 3100
 Restart=always
 RestartSec=10
-EnvironmentFile=/etc/codehound-mcp/env
+EnvironmentFile=/etc/hound-mcp/env
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=codehound-mcp
+SyslogIdentifier=hound-mcp
 
 [Install]
 WantedBy=multi-user.target
@@ -353,18 +353,18 @@ Enable and start:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable codehound-mcp
-sudo systemctl start codehound-mcp
+sudo systemctl enable hound-mcp
+sudo systemctl start hound-mcp
 ```
 
 #### 3. Nginx Reverse Proxy (HTTPS)
 
-Create `/etc/nginx/sites-available/codehound-mcp`:
+Create `/etc/nginx/sites-available/hound-mcp`:
 
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name codehound-mcp.example.com;
+    server_name hound-mcp.example.com;
 
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
@@ -394,7 +394,7 @@ Add to `~/.claude.json` on the client machine:
 {
   "mcpServers": {
     "hound": {
-      "url": "https://codehound-mcp.example.com/"
+      "url": "https://hound-mcp.example.com/"
     }
   }
 }
@@ -423,7 +423,7 @@ CodeHound can automatically update the Hound index when repositories are created
    ```
 
 2. Add a webhook in Gitea (Organization or Repository settings):
-   - **URL**: `https://codehound-mcp.example.com/webhook/gitea`
+   - **URL**: `https://hound-mcp.example.com/webhook/gitea`
    - **Content Type**: `application/json`
    - **Events**: Repository (Created, Deleted)
    - **Secret**: Same as `HOUND_WEBHOOK_SECRET` (optional)
@@ -433,7 +433,7 @@ CodeHound can automatically update the Hound index when repositories are created
 Trigger a manual sync via authenticated API:
 
 ```bash
-curl -X POST https://codehound-mcp.example.com/admin/sync \
+curl -X POST https://hound-mcp.example.com/admin/sync \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -470,13 +470,13 @@ curl -X POST https://codehound-mcp.example.com/admin/sync \
 
 ```bash
 # Check status
-sudo systemctl status codehound-mcp
+sudo systemctl status hound-mcp
 
 # View logs
-sudo journalctl -u codehound-mcp -f
+sudo journalctl -u hound-mcp -f
 
 # Restart after config changes
-sudo systemctl restart codehound-mcp
+sudo systemctl restart hound-mcp
 ```
 
 ### Client Credentials CLI
@@ -485,13 +485,13 @@ For manual client management:
 
 ```bash
 # Create a client
-codehound-mcp-auth create "My Client Name"
+hound-mcp-auth create "My Client Name"
 
 # List clients
-codehound-mcp-auth list
+hound-mcp-auth list
 
 # Revoke a client
-codehound-mcp-auth revoke mcp_xxxxx
+hound-mcp-auth revoke mcp_xxxxx
 ```
 
 > **Note**: Tokens are stored in-memory. Server restarts require re-authentication.
@@ -553,7 +553,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
 
 ## Project Status
 
-This project is in active development. See the [issues](https://github.com/jmagly/codehound-mcp/issues) for planned features and known issues.
+This project is in active development. See the [issues](https://github.com/jmagly/hound-mcp/issues) for planned features and known issues.
 
 ## ❤️ Sponsors
 
@@ -591,7 +591,7 @@ Harnessing the transformative potential of AI and blockchain to shape digital au
 </tr>
 </table>
 
-**Interested in sponsoring?** [Contact us](https://github.com/jmagly/codehound-mcp/discussions) to learn how your organization can support open-source AI tooling.
+**Interested in sponsoring?** [Contact us](https://github.com/jmagly/hound-mcp/discussions) to learn how your organization can support open-source AI tooling.
 
 ## Acknowledgments
 

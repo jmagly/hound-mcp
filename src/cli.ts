@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * MCP-Hound CLI Tool
+ * Hound MCP CLI Tool
  *
  * Manage OAuth2 client credentials for MCP server access.
  */
@@ -9,7 +9,7 @@ import { createClient, listClients, revokeClient } from './auth.js';
 
 function printUsage(): void {
   console.log(`
-MCP-Hound Credential Manager
+Hound MCP Credential Manager
 
 Usage:
   mcp-hound-auth create <name>     Create a new client credential

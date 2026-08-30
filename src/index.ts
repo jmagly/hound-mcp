@@ -65,7 +65,7 @@ function parseArgs(): { mode: 'stdio' | 'http'; port: number } {
 function createMcpServer(): Server {
   const mcpServer = new Server(
     {
-      name: 'codehound-mcp',
+      name: 'hound-mcp',
       version: '0.2.0',
     },
     {
@@ -292,7 +292,7 @@ async function startHttpServer(port: number) {
         response_types_supported: ['code', 'token'],
         scopes_supported: ['mcp'],
         code_challenge_methods_supported: ['S256'],
-        service_documentation: 'https://github.com/jmagly/mcp-hound',
+        service_documentation: 'https://github.com/jmagly/hound-mcp',
       }));
       return;
     }

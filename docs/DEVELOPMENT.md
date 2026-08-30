@@ -1,6 +1,6 @@
-# MCP-Hound Development Guide
+# Hound MCP Development Guide
 
-This guide covers building, testing, deploying, and troubleshooting MCP-Hound.
+This guide covers building, testing, deploying, and troubleshooting Hound MCP.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ This guide covers building, testing, deploying, and troubleshooting MCP-Hound.
 
 ```bash
 # Clone repository
-git clone https://github.com/jmagly/mcp-hound.git
+git clone https://github.com/jmagly/hound-mcp.git
 cd mcp-hound
 
 # Install dependencies

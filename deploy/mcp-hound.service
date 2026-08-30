@@ -1,6 +1,6 @@
 [Unit]
-Description=MCP-Hound Code Search Server
-Documentation=https://github.com/jmagly/mcp-hound
+Description=Hound MCP Code Search Server
+Documentation=https://github.com/jmagly/hound-mcp
 After=network.target
 
 [Service]

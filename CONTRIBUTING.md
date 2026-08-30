@@ -1,6 +1,6 @@
-# Contributing to MCP-Hound
+# Contributing to Hound MCP
 
-Thank you for your interest in contributing to MCP-Hound! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to Hound MCP! This document provides guidelines and information for contributors.
 
 ## Getting Started
 
@@ -15,7 +15,7 @@ Thank you for your interest in contributing to MCP-Hound! This document provides
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/jmagly/mcp-hound.git
+   git clone https://github.com/jmagly/hound-mcp.git
    cd mcp-hound
    ```
 
@@ -180,7 +180,7 @@ describe('hound_search', () => {
 ### Reporting Bugs
 
 Include:
-- MCP-Hound version
+- Hound MCP version
 - Node.js version
 - Hound server version
 - Steps to reproduce
@@ -196,7 +196,7 @@ Include:
 
 ## Architecture Overview
 
-MCP-Hound is a stateless MCP server that wraps the Hound code search API:
+Hound MCP is a stateless MCP server that wraps the Hound code search API:
 
 ```
 Claude Code ──stdio──> MCP Server ──HTTP──> Hound API
@@ -211,10 +211,10 @@ Claude Code ──stdio──> MCP Server ──HTTP──> Hound API
 
 ## Getting Help
 
-- **Documentation**: See the [README](https://github.com/jmagly/mcp-hound#readme)
-- **Issues**: Open an [issue](https://github.com/jmagly/mcp-hound/issues) for bugs or questions
+- **Documentation**: See the [README](https://github.com/jmagly/hound-mcp#readme)
+- **Issues**: Open an [issue](https://github.com/jmagly/hound-mcp/issues) for bugs or questions
 - **Discussions**: Use GitHub Discussions for feature ideas
 
 ## License
 
-By contributing to MCP-Hound, you agree that your contributions will be licensed under the MIT License.
+By contributing to Hound MCP, you agree that your contributions will be licensed under the MIT License.

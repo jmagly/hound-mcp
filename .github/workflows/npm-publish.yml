@@ -1,0 +1,49 @@
+name: Publish npm package
+on:
+  push:
+    tags: ['v*']
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Verify signed tag and version
+        run: |
+          git verify-tag "${GITHUB_REF#refs/tags/}"
+          test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
+      - run: npm ci && npm run check
+      - name: Select dist-tag
+        id: channel
+        run: |
+          case "${GITHUB_REF#refs/tags/v}" in
+            *-nightly.*) CHANNEL=nightly ;;
+            *-*) CHANNEL=next ;;
+            *) CHANNEL=latest ;;
+          esac
+          echo "name=$CHANNEL" >> "$GITHUB_OUTPUT"
+      - name: Publish with trusted publishing and provenance
+        run: npm publish --provenance --access public --tag "${{ steps.channel.outputs.name }}"
+      - name: Verify public provenance
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          for attempt in 1 2 3 4 5; do
+            VIEW="$(npm view "@jmagly/hound-mcp@$VERSION" --json 2>/dev/null || true)"
+            if printf '%s' "$VIEW" | jq -e '.dist.integrity and .dist.tarball and (.dist.attestations | length > 0)' >/dev/null; then exit 0; fi
+            sleep 10
+          done
+          exit 1
+

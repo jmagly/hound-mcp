@@ -1,0 +1,68 @@
+name: Internal release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  NODE_VERSION: '24'
+  REGISTRY: git.integrolabs.net
+  IMAGE: roctinam/hound-mcp
+  NPM_REGISTRY: https://git.integrolabs.net/api/packages/roctinam/npm/
+jobs:
+  verify:
+    runs-on: teroknor
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Verify release input
+        run: |
+          git verify-tag "${GITHUB_REF#refs/tags/}"
+          test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
+          npm ci
+          npm run check
+  publish:
+    runs-on: teroknor
+    needs: verify
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.INTERNAL_PUBLISH_TOKEN }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: ${{ env.NPM_REGISTRY }}
+      - run: npm ci && npm run build
+      - name: Select channel
+        id: channel
+        run: |
+          case "${GITHUB_REF#refs/tags/v}" in
+            *-nightly.*) CHANNEL=nightly ;;
+            *-*) CHANNEL=next ;;
+            *) CHANNEL=latest ;;
+          esac
+          echo "name=$CHANNEL" >> "$GITHUB_OUTPUT"
+      - name: Publish internal npm package
+        run: npm publish --registry "$NPM_REGISTRY" --tag "${{ steps.channel.outputs.name }}"
+      - name: Publish container
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY" --username "$REGISTRY_USERNAME" --password-stdin
+          docker build --target production --tag "$REGISTRY/$IMAGE:$VERSION" .
+          docker push "$REGISTRY/$IMAGE:$VERSION"
+          if [ "${{ steps.channel.outputs.name }}" = latest ]; then
+            docker tag "$REGISTRY/$IMAGE:$VERSION" "$REGISTRY/$IMAGE:latest"
+            docker push "$REGISTRY/$IMAGE:latest"
+          fi
+          docker logout "$REGISTRY"
+

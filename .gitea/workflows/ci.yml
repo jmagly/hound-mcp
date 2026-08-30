@@ -1,237 +1,38 @@
-name: CI/CD
-
+name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
     branches: [main]
-
-env:
-  NODE_VERSION: '22'
-  REGISTRY: git.integrolabs.net
-  IMAGE_NAME: roctinam/mcp-hound
-  NPM_REGISTRY: https://git.integrolabs.net/api/packages/roctinam/npm/
-
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  #============================================================================
-  # Test Job - Run on all pushes and PRs
-  #============================================================================
-  test:
-    name: Test
+  quality:
+    name: Node ${{ matrix.node }} quality gates
     runs-on: teroknor
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22', '24']
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: TypeScript check
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test:run
-
-      - name: Build
-        run: npm run build
-
-  #============================================================================
-  # Internal Docker Publish - Push to Gitea Container Registry on every main push
-  #============================================================================
-  docker-internal:
-    name: Docker (Internal)
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:run
+      - run: npm run build
+      - run: npm run release:verify
+  container:
+    name: Container build
     runs-on: teroknor
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: quality
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Get short SHA
-        id: sha
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Log in to Gitea Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          target: production
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.SHORT_SHA }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          labels: |
-            org.opencontainers.image.title=MCP-Hound
-            org.opencontainers.image.description=MCP server for Hound code search
-            org.opencontainers.image.version=dev-${{ steps.sha.outputs.SHORT_SHA }}
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-
-  #============================================================================
-  # Internal NPM Publish - Push to Gitea Package Registry on every main push
-  #============================================================================
-  npm-internal:
-    name: NPM (Internal)
-    runs-on: teroknor
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Get short SHA
-        id: sha
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Set dev version
-        run: |
-          # Get base version from package.json and append dev suffix
-          BASE_VERSION=$(node -p "require('./package.json').version")
-          DEV_VERSION="${BASE_VERSION}-dev.${GITHUB_SHA::7}"
-          npm version "$DEV_VERSION" --no-git-tag-version
-          echo "Publishing version: $DEV_VERSION"
-
-      - name: Configure npm for Gitea registry
-        run: |
-          echo "@jmagly:registry=${{ env.NPM_REGISTRY }}" >> .npmrc
-          echo "//git.integrolabs.net/api/packages/roctinam/npm/:_authToken=${{ secrets.INTERNAL_PUBLISH_TOKEN }}" >> .npmrc
-
-      - name: Publish to Gitea npm registry
-        run: npm publish --tag dev
-
-  #============================================================================
-  # Release Docker Publish - Publish to Gitea Container Registry on tags
-  #============================================================================
-  docker-release:
-    name: Docker (Release)
-    runs-on: teroknor
-    needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Log in to Gitea Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          target: production
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          labels: |
-            org.opencontainers.image.title=MCP-Hound
-            org.opencontainers.image.description=MCP server for Hound code search
-            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-
-  #============================================================================
-  # Release NPM Publish - Publish to Gitea Package Registry on tags
-  #============================================================================
-  npm-release:
-    name: NPM (Release)
-    runs-on: teroknor
-    needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Configure npm for Gitea registry
-        run: |
-          echo "@jmagly:registry=${{ env.NPM_REGISTRY }}" >> .npmrc
-          echo "//git.integrolabs.net/api/packages/roctinam/npm/:_authToken=${{ secrets.INTERNAL_PUBLISH_TOKEN }}" >> .npmrc
-
-      - name: Publish to Gitea npm registry
-        run: npm publish
-
-  #============================================================================
-  # Create Release Job - Create Gitea release on tags
-  #============================================================================
-  release:
-    name: Create Release
-    runs-on: teroknor
-    needs: [docker-release, npm-release]
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Create Gitea Release
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.INTERNAL_PUBLISH_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            "${{ github.server_url }}/api/v1/repos/${{ github.repository }}/releases" \
-            -d '{
-              "tag_name": "v${{ steps.version.outputs.VERSION }}",
-              "name": "v${{ steps.version.outputs.VERSION }}",
-              "body": "## MCP-Hound v${{ steps.version.outputs.VERSION }}\n\n### Installation\n\n**npm (internal):**\n```bash\nnpm install @jmagly/mcp-hound --registry=${{ env.NPM_REGISTRY }}\n```\n\n**Docker (internal):**\n```bash\ndocker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}\n```\n\nSee [CHANGELOG.md](CHANGELOG.md) for detailed changes.",
-              "draft": false,
-              "prerelease": false
-            }'
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - run: docker build --target production --tag hound-mcp:ci-${GITHUB_SHA} .

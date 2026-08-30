@@ -3,9 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
+
+## [2026.8.29] - 2026-08-29
+
+### Changed
+- Renamed the project and public package to Hound MCP (`@jmagly/hound-mcp`) before its first npmjs.org release.
+- Adopted CalVer (`YYYY.M.PATCH`) and a signed-tag, provenance-bearing release process.
+- Split continuous integration from tag-triggered Gitea and npmjs.org publishing.
+
+### Security
+- Pinned third-party CI actions to immutable commit SHAs.
+- Added package-name, version/tag, tarball-content, checksum, and npm provenance gates.
 
 ### Added
 - GitHub provider support alongside Gitea for file context and deep links
@@ -39,5 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/mcp-hound/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/jmagly/mcp-hound/releases/tag/v0.1.0
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.29...HEAD
+[2026.8.29]: https://github.com/jmagly/hound-mcp/releases/tag/v2026.8.29
+[0.1.0]: https://github.com/jmagly/hound-mcp/releases/tag/v0.1.0

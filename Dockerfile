@@ -1,4 +1,4 @@
-# CodeHound MCP Docker Image
+# Hound MCP Docker Image
 # Multi-stage build for minimal production image
 
 #==============================================================================
@@ -51,9 +51,9 @@ RUN npm run typecheck && npm run lint && npm run test:run
 FROM node:24-alpine AS production
 
 # Add labels for container metadata
-LABEL org.opencontainers.image.title="CodeHound MCP"
+LABEL org.opencontainers.image.title="Hound MCP"
 LABEL org.opencontainers.image.description="Multi-modal code search MCP server"
-LABEL org.opencontainers.image.source="https://git.integrolabs.net/roctinam/mcp-hound"
+LABEL org.opencontainers.image.source="https://git.integrolabs.net/roctinam/hound-mcp"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.vendor="Integro Labs"
 

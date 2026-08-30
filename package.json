@@ -1,12 +1,12 @@
 {
-  "name": "@jmagly/codehound-mcp",
-  "version": "0.3.0",
+  "name": "@jmagly/hound-mcp",
+  "version": "2026.8.29",
   "description": "MCP server for multi-modal code search: text (Hound), symbols (tree-sitter), and future semantic search",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "codehound-mcp": "dist/index.js",
-    "codehound-auth": "dist/cli.js"
+    "hound-mcp": "dist/index.js",
+    "hound-mcp-auth": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -22,7 +22,9 @@
     "format": "prettier --write src/",
     "test": "vitest",
     "test:run": "vitest --run",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest --run --coverage",
+    "check": "npm run typecheck && npm run lint && npm run test:run && npm run build && npm run release:verify",
+    "release:verify": "node tools/release/verify-release.mjs",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
@@ -40,16 +42,21 @@
   ],
   "author": "jmagly",
   "license": "MIT",
-  "homepage": "https://github.com/jmagly/mcp-hound#readme",
+  "homepage": "https://github.com/jmagly/hound-mcp#readme",
   "bugs": {
-    "url": "https://github.com/jmagly/mcp-hound/issues"
+    "url": "https://github.com/jmagly/hound-mcp/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jmagly/mcp-hound.git"
+    "url": "git+https://github.com/jmagly/hound-mcp.git"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "packageManager": "npm@11.6.2",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

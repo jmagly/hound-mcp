@@ -91,7 +91,7 @@ Gitea Actions pipeline (`.gitea/workflows/ci.yml`):
 - **On main push**: Build and push dev Docker image, publish dev npm package
 - **On tags (v*)**: Build release Docker image, publish release npm package, create Gitea release
 
-Registry: `git.integrolabs.net/roctinam/mcp-hound`
+Registry: `git.integrolabs.net/roctinam/hound-mcp`
 
 ## Configuration
 

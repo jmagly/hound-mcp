@@ -1,4 +1,4 @@
-# MCP-Hound Development Dockerfile
+# Hound MCP Development Dockerfile
 # Includes dev dependencies and supports live reload
 
 FROM node:24-alpine
