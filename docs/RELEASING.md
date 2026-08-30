@@ -16,6 +16,18 @@ nightly versions publish with `nightly`.
    release version for this step: npm versions are immutable and the subsequent
    trusted-publisher workflow must publish that stable version itself. A trusted
    publisher cannot be configured until the package exists.
+
+   Run the guarded bootstrap from a clean checkout. It defaults to a dry run
+   and never changes the source worktree:
+
+   ```bash
+   tools/release/bootstrap-npm.sh
+   tools/release/bootstrap-npm.sh --publish
+   ```
+
+   The publish form requires an authenticated npm owner session, publishes only
+   the disposable CalVer alpha version under the `bootstrap` dist-tag, disables
+   local provenance, and verifies the resulting registry version.
 3. On npmjs.org, configure a GitHub Actions trusted publisher for
    `@jmagly/hound-mcp`, repository `jmagly/hound-mcp`, workflow
    `npm-publish.yml`, environment `npm`. Do not create an `NPM_TOKEN`.
