@@ -15,13 +15,14 @@ env:
 jobs:
   verify:
     runs-on: teroknor
+    container: node:24@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb # node 24.15.0
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
       - name: Verify release input
         run: |
           tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
@@ -34,10 +35,6 @@ jobs:
     if: ${{ secrets.VAULT_CI_ROLE_ID != '' && secrets.VAULT_CI_SECRET_ID != '' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: ${{ env.NPM_REGISTRY }}
       - name: Fetch scoped publish credentials
         env:
           VAULT_ADDR: ${{ vars.VAULT_ADDR }}
@@ -47,7 +44,6 @@ jobs:
           REGISTRY_TOKEN_VAULT_FIELD: ${{ vars.REGISTRY_TOKEN_VAULT_FIELD }}
           REGISTRY_USERNAME_VAULT_FIELD: ${{ vars.REGISTRY_USERNAME_VAULT_FIELD }}
         run: bash ci/vault-fetch.sh --spec ci/vault-fetch.release.spec
-      - run: npm ci && npm run build
       - name: Select channel
         id: channel
         run: |
@@ -58,7 +54,11 @@ jobs:
           esac
           echo "name=$CHANNEL" >> "$GITHUB_OUTPUT"
       - name: Publish internal npm package
-        run: npm publish --registry "$NPM_REGISTRY" --tag "${{ steps.channel.outputs.name }}"
+        run: |
+          docker run --rm --env NODE_AUTH_TOKEN \
+            --volume "$PWD:/work" --workdir /work \
+            node:24@sha256:050bf2bbe33c1d6754e060bec89378a79ed831f04a7bb1a53fe45e997df7b3bb \
+            bash -c 'npm ci && npm run build && printf "%s\n" "//git.integrolabs.net/api/packages/roctinam/npm/:_authToken=\${NODE_AUTH_TOKEN}" > /tmp/npmrc && npm publish --userconfig /tmp/npmrc --registry "$NPM_REGISTRY" --tag "${{ steps.channel.outputs.name }}"'
       - name: Publish container
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
