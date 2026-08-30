@@ -7,12 +7,18 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
-## [2026.8.34] - 2026-08-29
+## [2026.8.35] - 2026-08-29
 
 ### Fixed
 - Use job-level containers for verification and npm publication so the runner does not depend on invalid nested Docker bind mounts.
 - Scope Git's safe-directory exception to the checked-out workspace during containerized tag verification.
 - Restore the annotated tag object after checkout before verifying its signature.
+- Fail closed during credential retrieval instead of silently skipping publish jobs through an unsupported job-level secrets expression.
+
+## [2026.8.34] - 2026-08-29
+
+### Fixed
+- Restored and verified the annotated tag after checkout; publication jobs were skipped by unsupported job-level secret evaluation, so this candidate was not published.
 
 ## [2026.8.33] - 2026-08-29
 
@@ -77,7 +83,8 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.34...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.35...HEAD
+[2026.8.35]: https://github.com/jmagly/hound-mcp/compare/v2026.8.34...v2026.8.35
 [2026.8.34]: https://github.com/jmagly/hound-mcp/compare/v2026.8.33...v2026.8.34
 [2026.8.33]: https://github.com/jmagly/hound-mcp/compare/v2026.8.32...v2026.8.33
 [2026.8.32]: https://github.com/jmagly/hound-mcp/compare/v2026.8.31...v2026.8.32
