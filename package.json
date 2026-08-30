@@ -1,6 +1,6 @@
 {
   "name": "@jmagly/hound-mcp",
-  "version": "2026.8.37",
+  "version": "2026.8.38",
   "description": "MCP server for multi-modal code search: text (Hound), symbols (tree-sitter), and future semantic search",
   "type": "module",
   "main": "dist/index.js",

@@ -7,7 +7,7 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
-## [2026.8.37] - 2026-08-29
+## [2026.8.38] - 2026-08-29
 
 ### Fixed
 - Use job-level containers for verification and npm publication so the runner does not depend on invalid nested Docker bind mounts.
@@ -15,6 +15,12 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Restore the annotated tag object after checkout before verifying its signature.
 - Fail closed during credential retrieval instead of silently skipping publish jobs through an unsupported job-level secrets expression.
 - Trust the public Integro Labs G2 CA bundle for authenticated OpenBao access from minimal release containers.
+- Disable GitHub OIDC provenance only for the authenticated internal Gitea mirror while retaining it for npmjs.org.
+
+## [2026.8.37] - 2026-08-29
+
+### Fixed
+- Reconciled the scoped AppRole and reached the internal registry; Gitea cannot issue GitHub OIDC provenance, so this candidate was not published.
 
 ## [2026.8.36] - 2026-08-29
 
@@ -94,7 +100,8 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.37...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.38...HEAD
+[2026.8.38]: https://github.com/jmagly/hound-mcp/compare/v2026.8.37...v2026.8.38
 [2026.8.37]: https://github.com/jmagly/hound-mcp/compare/v2026.8.36...v2026.8.37
 [2026.8.36]: https://github.com/jmagly/hound-mcp/compare/v2026.8.35...v2026.8.36
 [2026.8.35]: https://github.com/jmagly/hound-mcp/compare/v2026.8.34...v2026.8.35
