@@ -32,16 +32,22 @@ jobs:
   publish:
     runs-on: teroknor
     needs: verify
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.INTERNAL_PUBLISH_TOKEN }}
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+    if: ${{ secrets.VAULT_CI_ROLE_ID != '' && secrets.VAULT_CI_SECRET_ID != '' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
+      - name: Fetch scoped publish credentials
+        env:
+          VAULT_ADDR: ${{ vars.VAULT_ADDR }}
+          VAULT_CI_ROLE_ID: ${{ secrets.VAULT_CI_ROLE_ID }}
+          VAULT_CI_SECRET_ID: ${{ secrets.VAULT_CI_SECRET_ID }}
+          REGISTRY_CREDENTIAL_VAULT_PATH: ${{ vars.REGISTRY_CREDENTIAL_VAULT_PATH }}
+          REGISTRY_TOKEN_VAULT_FIELD: ${{ vars.REGISTRY_TOKEN_VAULT_FIELD }}
+          REGISTRY_USERNAME_VAULT_FIELD: ${{ vars.REGISTRY_USERNAME_VAULT_FIELD }}
+        run: bash ci/vault-fetch.sh --spec ci/vault-fetch.release.spec
       - run: npm ci && npm run build
       - name: Select channel
         id: channel
@@ -57,7 +63,7 @@ jobs:
       - name: Publish container
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY" --username "$REGISTRY_USERNAME" --password-stdin
+          printf '%s' "$NODE_AUTH_TOKEN" | docker login "$REGISTRY" --username "$REGISTRY_USERNAME" --password-stdin
           docker build --target production --tag "$REGISTRY/$IMAGE:$VERSION" .
           docker push "$REGISTRY/$IMAGE:$VERSION"
           if [ "${{ steps.channel.outputs.name }}" = latest ]; then
