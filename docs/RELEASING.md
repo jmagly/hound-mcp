@@ -8,10 +8,14 @@ nightly versions publish with `nightly`.
 
 1. Rename both forge repositories to `hound-mcp` and retain redirects from
    `mcp-hound` where the forge supports them.
-2. Bootstrap the first public version with an operator-authenticated npm
-   publication using account 2FA (or a short-lived granular token with bypass
-   2FA). A trusted publisher cannot be configured until the package exists.
-   Inspect the exact tarball from `npm pack` before this one-time bootstrap.
+2. Bootstrap the package name with a distinct prerelease such as
+   `2026.8.0-alpha.0`, published under a non-default `bootstrap` dist-tag from a
+   disposable clean worktree. Use an operator-authenticated npm session with
+   account 2FA (or a short-lived granular token with bypass 2FA), inspect the
+   exact tarball first, and use `--access public`. Never use the intended stable
+   release version for this step: npm versions are immutable and the subsequent
+   trusted-publisher workflow must publish that stable version itself. A trusted
+   publisher cannot be configured until the package exists.
 3. On npmjs.org, configure a GitHub Actions trusted publisher for
    `@jmagly/hound-mcp`, repository `jmagly/hound-mcp`, workflow
    `npm-publish.yml`, environment `npm`. Do not create an `NPM_TOKEN`.
