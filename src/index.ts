@@ -9,6 +9,7 @@
  */
 
 import { createServer } from 'node:http';
+import { timingSafeEqual } from 'node:crypto';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -229,6 +230,18 @@ function validateAuth(req: import('node:http').IncomingMessage): { valid: boolea
   return validateBearerToken(token);
 }
 
+export function validateApprovalToken(candidate: string | undefined): boolean {
+  const expected = process.env.MCP_APPROVAL_TOKEN;
+  if (!expected || !candidate) return false;
+  const expectedBuffer = Buffer.from(expected);
+  const candidateBuffer = Buffer.from(candidate);
+  return expectedBuffer.length === candidateBuffer.length && timingSafeEqual(expectedBuffer, candidateBuffer);
+}
+
+function publicBaseUrl(req: import('node:http').IncomingMessage, port: number): string {
+  return (process.env.MCP_PUBLIC_BASE_URL || `https://${req.headers.host || `localhost:${port}`}`).replace(/\/$/, '');
+}
+
 /**
  * Start the server in HTTP mode (for remote/service mode)
  */
@@ -267,7 +280,7 @@ async function startHttpServer(port: number) {
 
     // OAuth2 Authorization Server Metadata (RFC 8414)
     if (req.url === '/.well-known/oauth-authorization-server' && req.method === 'GET') {
-      const baseUrl = `https://${req.headers.host || `localhost:${port}`}`;
+      const baseUrl = publicBaseUrl(req, port);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         issuer: baseUrl,
@@ -286,7 +299,7 @@ async function startHttpServer(port: number) {
 
     // Protected Resource Metadata (RFC 9728)
     if (req.url === '/.well-known/oauth-protected-resource' && req.method === 'GET') {
-      const baseUrl = `https://${req.headers.host || `localhost:${port}`}`;
+      const baseUrl = publicBaseUrl(req, port);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         resource: baseUrl,
@@ -318,6 +331,12 @@ async function startHttpServer(port: number) {
 
       // POST = user clicked approve button
       if (req.method === 'POST') {
+        const form = new URLSearchParams(await readBody(req));
+        if (!validateApprovalToken(form.get('approval_token') || undefined)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'access_denied' }));
+          return;
+        }
         const code = createAuthorizationCode(clientId, redirectUri, codeChallenge, codeChallengeMethod);
         const redirectUrl = new URL(redirectUri);
         redirectUrl.searchParams.set('code', code);
@@ -432,6 +451,9 @@ async function startHttpServer(port: number) {
     </div>
 
     <form method="POST" class="buttons">
+      <label for="approval_token" class="sr-only">Operator approval token</label>
+      <input id="approval_token" name="approval_token" type="password" required
+             autocomplete="off" placeholder="Operator approval token">
       <button type="button" class="deny" onclick="window.close()">Cancel</button>
       <button type="submit" class="approve">Authorize</button>
     </form>
@@ -447,6 +469,12 @@ async function startHttpServer(port: number) {
     // Dynamic Client Registration (RFC 7591)
     if (req.url === '/oauth/register' && req.method === 'POST') {
       try {
+        const registrationToken = req.headers.authorization?.replace(/^Bearer\s+/i, '');
+        if (!validateApprovalToken(registrationToken)) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'invalid_token' }));
+          return;
+        }
         const body = await readBody(req);
         const request = JSON.parse(body);
         const response = registerClient(request);
@@ -593,7 +621,7 @@ async function startHttpServer(port: number) {
 
     // SSE endpoint - establishes SSE stream
     if ((req.url === '/sse' || req.url === '/') && req.method === 'GET' && req.headers['accept']?.includes('text/event-stream')) {
-      const baseUrl = `https://${req.headers.host || `localhost:${port}`}`;
+      const baseUrl = publicBaseUrl(req, port);
       console.error(`[sse] GET ${req.url} - SSE transport connection`);
 
       // Validate bearer token
@@ -610,17 +638,17 @@ async function startHttpServer(port: number) {
 
       console.error(`[sse] auth success, creating SSE transport`);
       const transport = new SSEServerTransport('/messages', res);
-      console.error(`[sse] transport created with sessionId: ${transport.sessionId}`);
+      console.error(`[sse] transport created`);
       transports.set(transport.sessionId, transport);
 
       res.on('close', () => {
-        console.error(`[sse] connection closed for session ${transport.sessionId}`);
+        console.error(`[sse] connection closed`);
         transports.delete(transport.sessionId);
       });
 
       const mcpServer = createMcpServer();
       await mcpServer.connect(transport);
-      console.error(`[sse] MCP server connected for session ${transport.sessionId}`);
+      console.error(`[sse] MCP server connected`);
       return;
     }
 
@@ -628,7 +656,7 @@ async function startHttpServer(port: number) {
     if (req.url?.startsWith('/messages') && req.method === 'POST') {
       const urlObj = new URL(req.url, `http://${req.headers.host}`);
       const sessionId = urlObj.searchParams.get('sessionId');
-      console.error(`[messages] POST with sessionId: ${sessionId}`);
+      console.error(`[messages] POST`);
 
       // Validate bearer token
       const auth = validateAuth(req);
@@ -647,7 +675,7 @@ async function startHttpServer(port: number) {
 
       const transport = transports.get(sessionId);
       if (!transport || !(transport instanceof SSEServerTransport)) {
-        console.error(`[messages] no SSE transport found for session ${sessionId}`);
+        console.error(`[messages] no SSE transport found`);
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'No SSE transport found for sessionId' }));
         return;
@@ -655,7 +683,7 @@ async function startHttpServer(port: number) {
 
       const body = await readBody(req);
       const message = JSON.parse(body);
-      console.error(`[messages] handling message for session ${sessionId}`);
+      console.error(`[messages] handling message`);
       await transport.handlePostMessage(req, res, message);
       return;
     }
@@ -666,7 +694,7 @@ async function startHttpServer(port: number) {
 
     // MCP endpoint (root path) - requires authentication
     if (req.url === '/' || req.url?.startsWith('/?')) {
-      const baseUrl = `https://${req.headers.host || `localhost:${port}`}`;
+      const baseUrl = publicBaseUrl(req, port);
       console.error(`[mcp] ${req.method} ${req.url}`);
 
       // Validate bearer token
@@ -681,11 +709,11 @@ async function startHttpServer(port: number) {
         res.end(JSON.stringify({ error: 'unauthorized', error_description: 'Valid bearer token required' }));
         return;
       }
-      console.error(`[mcp] auth success for client=${auth.clientId}`);
+      console.error(`[mcp] auth success`);
 
       // Get or create session ID from header
       const sessionId = req.headers['mcp-session-id'] as string | undefined;
-      console.error(`[mcp] sessionId from header: ${sessionId || 'none'}`);
+      console.error(`[mcp] session header present: ${Boolean(sessionId)}`);
 
       if (req.method === 'POST') {
         // Handle new connection or message (Streamable HTTP only)
@@ -708,7 +736,7 @@ async function startHttpServer(port: number) {
 
           // Cleanup on close
           transport.onclose = () => {
-            console.error(`[mcp] transport closed: ${transport?.sessionId}`);
+            console.error(`[mcp] transport closed`);
             if (transport?.sessionId) {
               transports.delete(transport.sessionId);
             }
@@ -725,7 +753,7 @@ async function startHttpServer(port: number) {
 
         // Store transport AFTER handleRequest - sessionId is only set after first request
         if (transport.sessionId && !transports.has(transport.sessionId)) {
-          console.error(`[mcp] storing transport with sessionId: ${transport.sessionId}`);
+          console.error(`[mcp] storing transport`);
           transports.set(transport.sessionId, transport);
         }
         return;
@@ -735,7 +763,7 @@ async function startHttpServer(port: number) {
       // (SSE-only clients are handled by the /sse endpoint above)
       if (req.method === 'GET') {
         const existingTransport = sessionId ? transports.get(sessionId) : undefined;
-        console.error(`[mcp] GET, sessionId: ${sessionId || 'none'}, transport found: ${!!existingTransport}`);
+        console.error(`[mcp] GET, session present: ${Boolean(sessionId)}, transport found: ${!!existingTransport}`);
 
         if (!existingTransport || !(existingTransport instanceof StreamableHTTPServerTransport)) {
           console.error(`[mcp] GET without valid Streamable HTTP session`);

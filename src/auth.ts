@@ -118,7 +118,7 @@ function loadCredentials(): ClientCredential[] {
  * Save client credentials to file
  */
 function saveCredentials(credentials: ClientCredential[]): void {
-  writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2));
+  writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2), { mode: 0o600 });
 }
 
 /**

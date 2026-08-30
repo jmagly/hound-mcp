@@ -22,7 +22,7 @@ COPY src/ ./src/
 RUN npm run build
 
 # Prune dev dependencies
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 #==============================================================================
 # Stage 2: Test (optional - used for CI)
@@ -53,7 +53,7 @@ FROM node:24-alpine AS production
 # Add labels for container metadata
 LABEL org.opencontainers.image.title="CodeHound MCP"
 LABEL org.opencontainers.image.description="Multi-modal code search MCP server"
-LABEL org.opencontainers.image.source="https://github.com/jmagly/mcp-hound"
+LABEL org.opencontainers.image.source="https://git.integrolabs.net/roctinam/mcp-hound"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.vendor="Integro Labs"
 
