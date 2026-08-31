@@ -51,8 +51,19 @@ git archive HEAD | tar -x -C "$work"
 )
 
 if [[ "$PUBLISH" == 1 ]]; then
-  published="$(npm view "$PACKAGE@$VERSION" version --registry "$REGISTRY")"
-  [[ "$published" == "$VERSION" ]] || { echo 'bootstrap publication did not verify' >&2; exit 1; }
+  published=""
+  for attempt in {1..12}; do
+    published="$(npm view "$PACKAGE@$VERSION" version --registry "$REGISTRY" 2>/dev/null || true)"
+    [[ "$published" == "$VERSION" ]] && break
+    sleep 5
+  done
+  [[ "$published" == "$VERSION" ]] || { echo 'bootstrap publication did not propagate within 60 seconds' >&2; exit 1; }
+  bootstrap_tag="$(npm view "$PACKAGE" dist-tags.bootstrap --registry "$REGISTRY")"
+  [[ "$bootstrap_tag" == "$VERSION" ]] || { echo 'bootstrap dist-tag did not verify' >&2; exit 1; }
+  latest_tag="$(npm view "$PACKAGE" dist-tags.latest --registry "$REGISTRY" 2>/dev/null || true)"
+  if [[ "$latest_tag" == "$VERSION" ]]; then
+    npm dist-tag rm "$PACKAGE" latest --registry "$REGISTRY"
+  fi
   echo "verified bootstrap publication: $PACKAGE@$VERSION (dist-tag: bootstrap)"
 else
   echo "bootstrap dry run passed for $PACKAGE@$VERSION; rerun with --publish from an authenticated npm owner session"

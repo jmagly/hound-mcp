@@ -7,6 +7,20 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
+## [2026.8.39] - 2026-08-31
+
+### Added
+- Publish the first stable public npm release as `hound-search-mcp` using GitHub OIDC trusted publishing and provenance.
+- Add a provider-orchestrated AIWG setup manifest and installation guidance for every AIWG provider.
+
+### Changed
+- Limit the npm tarball to runtime JavaScript and required package metadata.
+- Make npm publication retry-safe by verifying immutable package integrity across public and internal registries.
+
+### Fixed
+- Retry first-package registry verification while npm metadata propagates.
+- Remove an automatically assigned prerelease `latest` dist-tag after bootstrap publication.
+
 ## [2026.8.38] - 2026-08-29
 
 ### Fixed
@@ -100,7 +114,8 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.38...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.39...HEAD
+[2026.8.39]: https://github.com/jmagly/hound-mcp/compare/v2026.8.38...v2026.8.39
 [2026.8.38]: https://github.com/jmagly/hound-mcp/compare/v2026.8.37...v2026.8.38
 [2026.8.37]: https://github.com/jmagly/hound-mcp/compare/v2026.8.36...v2026.8.37
 [2026.8.36]: https://github.com/jmagly/hound-mcp/compare/v2026.8.35...v2026.8.36

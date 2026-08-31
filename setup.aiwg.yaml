@@ -1,0 +1,127 @@
+apiVersion: setup.aiwg.io/v1
+kind: SetupManifest
+metadata:
+  name: hound-search-mcp
+  description: Install and register Hound Search MCP without replacing existing provider configuration.
+  version: 2026.8.39
+  install_type: user
+  execution_mode: provider-orchestrated
+
+spec:
+  platforms:
+    - os: linux
+      arch: [x86_64, arm64, aarch64]
+      shell: bash
+    - os: macos
+      arch: [x86_64, arm64]
+      shell: zsh
+    - os: windows
+      arch: [x86_64, arm64]
+      shell: native
+
+  params:
+    - name: AIWG_PROVIDER
+      type: choice
+      required: true
+      choices:
+        - claude-code
+        - codex
+        - copilot
+        - factory
+        - cursor
+        - opencode
+        - warp
+        - windsurf
+        - hermes
+        - openclaw
+        - openhuman
+      description: Active AIWG provider to inspect and configure.
+    - name: HOUND_URL
+      type: string
+      interactive_required: true
+      description: Base URL of the existing Hound service.
+    - name: PACKAGE_VERSION
+      type: string
+      default: 2026.8.39
+      description: Immutable hound-search-mcp npm version to install.
+    - name: SERVER_NAME
+      type: string
+      default: hound-search
+      description: MCP server registration name.
+
+  prerequisites:
+    - name: node
+      detect: node --version
+      version_min: '20.0.0'
+      required: true
+      install_hint: Install Node.js 20 or newer from https://nodejs.org/.
+    - name: npm
+      detect: npm --version
+      required: true
+      install_hint: Install npm with Node.js.
+    - name: hound
+      detect: curl --fail --silent --show-error "${HOUND_URL}/api/v1/repos"
+      required: true
+      install_hint: Start Hound and provide its reachable base URL.
+
+  steps:
+    - id: inspect-provider
+      type: agentic
+      instruction: >-
+        Confirm the active AIWG provider matches AIWG_PROVIDER. Inspect its
+        current user- and workspace-level MCP configuration without modifying
+        it. Report whether AIWG marks MCP registration native for this provider,
+        locate the authoritative configuration surface, and identify conflicts
+        with SERVER_NAME. Do not search provider directories blindly; use AIWG
+        steward capability routing first.
+
+    - id: plan-registration
+      type: agentic
+      depends_on: [inspect-provider]
+      instruction: >-
+        Explain the exact change before applying it. Preserve all existing MCP
+        entries and create a recoverable backup when a file will change. The
+        stdio command must resolve to npx -y
+        hound-search-mcp@${PACKAGE_VERSION} with HOUND_URL in the server
+        environment. Never persist repository tokens unless the user explicitly
+        supplies and approves a provider secret-store location. If AIWG does not
+        support MCP registration for this provider, stop before editing and
+        present a generic external-host configuration.
+
+    - id: register-server
+      type: agentic
+      depends_on: [plan-registration]
+      instruction: >-
+        After user approval, register SERVER_NAME using the provider's native
+        MCP mechanism. Merge rather than replace existing configuration. Use an
+        absolute executable path only when the provider cannot resolve npx from
+        its normal environment.
+      on_fail: restore-provider-config
+
+    - id: verify-installation
+      type: agentic
+      depends_on: [register-server]
+      instruction: >-
+        Verify the exact npm version exists, the provider lists SERVER_NAME,
+        the process starts without an immediate error, and hound_repos returns
+        data from HOUND_URL. Redact tokens and credentials in the report. Do not
+        claim success when the provider lacks native MCP support or the tool call
+        was not completed.
+      on_fail: restore-provider-config
+
+  recovery:
+    - id: restore-provider-config
+      steps:
+        - id: restore-registration
+          type: agentic
+          instruction: >-
+            Remove only the SERVER_NAME entry created by this installation or
+            restore the reviewed pre-install backup. Preserve every unrelated
+            provider and MCP setting, then verify the provider configuration is
+            valid.
+
+  briefing:
+    success: Hound Search MCP is registered and verified against the configured Hound service.
+    next_steps:
+      - Reload the provider session if it does not discover newly registered MCP servers dynamically.
+      - Ask the agent to call hound_repos, then try a hound_search query.

@@ -38,8 +38,11 @@ Multi-modal code search MCP server combining [Hound](https://github.com/hound-se
 ## Installation
 
 ```bash
-# From npm (when published)
+# Install the command globally
 npm install -g hound-search-mcp
+
+# Or run it without a global install
+npx -y hound-search-mcp
 
 # From source
 git clone https://github.com/jmagly/hound-mcp.git
@@ -47,6 +50,17 @@ cd hound-mcp
 npm install
 npm run build
 ```
+
+For an AI-assisted installation, paste the installer prompt from
+[docs/INSTALLATION.md](docs/INSTALLATION.md) into your provider. The prompt uses
+the repository's reviewed [`setup.aiwg.yaml`](setup.aiwg.yaml) manifest to
+inspect existing configuration, preserve it, register the server, and verify
+the result.
+
+AIWG currently provides native MCP registration for Claude Code, Factory,
+Hermes, and OpenClaw. The installation guide also covers Codex, Copilot,
+Cursor, OpenCode, Warp, Windsurf, and OpenHuman, including the required fallback
+when AIWG cannot register MCP servers natively on that provider.
 
 ## Configuration
 
@@ -69,7 +83,19 @@ npm run build
 
 > **Note**: Configure either Gitea OR GitHub (required - Hound indexes repos from these). If both are set, Gitea takes priority. Tokens are optional but required for private repos and the `hound_file_context` tool.
 
-### Claude Code Integration
+### Claude Code quick start
+
+```bash
+claude mcp add --transport stdio \
+  --env HOUND_URL=http://localhost:6080 \
+  hound-search -- npx -y hound-search-mcp
+```
+
+Run `claude mcp list` to verify the registration. For every other AIWG provider,
+or to preserve and merge an existing configuration safely, follow the
+[complete provider installation guide](docs/INSTALLATION.md).
+
+### Manual Claude Code configuration
 
 Add to `~/.claude/settings.json`:
 
@@ -87,7 +113,7 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-Or using npx (when published):
+Or using npx:
 
 ```json
 {
