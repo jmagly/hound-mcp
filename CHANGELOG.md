@@ -60,7 +60,7 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 ## [2026.8.29] - 2026-08-29
 
 ### Changed
-- Renamed the project and public package to Hound MCP (`@jmagly/hound-mcp`) before its first npmjs.org release.
+- Renamed the project to Hound MCP and selected the unscoped npm package name `hound-search-mcp` before its first npmjs.org release.
 - Adopted CalVer (`YYYY.M.PATCH`) and a signed-tag, provenance-bearing release process.
 - Split continuous integration from tag-triggered Gitea and npmjs.org publishing.
 

@@ -4,7 +4,7 @@ set -euo pipefail
 VERSION="2026.8.0-alpha.0"
 PUBLISH=0
 REGISTRY="https://registry.npmjs.org/"
-PACKAGE="@jmagly/hound-mcp"
+PACKAGE="hound-search-mcp"
 
 usage() {
   printf 'usage: %s [--publish] [--version YYYY.M.PATCH-alpha.N]\n' "$0" >&2

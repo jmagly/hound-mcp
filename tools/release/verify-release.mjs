@@ -7,7 +7,7 @@ const pkg = JSON.parse(
 const lock = JSON.parse(
   readFileSync(new URL('../../package-lock.json', import.meta.url)),
 );
-const expectedName = '@jmagly/hound-mcp';
+const expectedName = 'hound-search-mcp';
 const calver =
   /^\d{4}\.(?:[1-9]|1[0-2])\.\d+(?:-(?:alpha|beta|rc|nightly)\.\d+)?$/;
 
@@ -40,13 +40,7 @@ const packed = JSON.parse(
   execFileSync('npm', ['pack', '--dry-run', '--json'], { encoding: 'utf8' }),
 )[0];
 const paths = new Set(packed.files.map((file) => file.path));
-for (const required of [
-  'dist/index.js',
-  'dist/cli.js',
-  'README.md',
-  'LICENSE',
-  'CONTRIBUTING.md',
-]) {
+for (const required of ['dist/index.js', 'dist/cli.js', 'README.md', 'LICENSE']) {
   if (!paths.has(required)) throw new Error(`tarball is missing ${required}`);
 }
 for (const target of Object.values(pkg.bin ?? {})) {
@@ -59,12 +53,12 @@ for (const target of Object.values(pkg.bin ?? {})) {
   }
 }
 for (const file of packed.files) {
-  if (
-    /^(?:src|test|\.github|\.gitea|\.aiwg)\//.test(file.path) ||
-    /(?:^|\/)\.env(?:\.|$)/.test(file.path)
-  ) {
-    throw new Error(`tarball contains non-release file ${file.path}`);
-  }
+  const allowed =
+    file.path === 'package.json' ||
+    file.path === 'README.md' ||
+    file.path === 'LICENSE' ||
+    /^dist\/.*\.js$/.test(file.path);
+  if (!allowed) throw new Error(`tarball contains non-runtime file ${file.path}`);
 }
 console.log(
   `verified ${packed.name}@${packed.version}: ${packed.entryCount} files, ${packed.size} bytes`,

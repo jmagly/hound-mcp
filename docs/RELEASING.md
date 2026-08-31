@@ -30,7 +30,7 @@ nightly versions publish with `nightly`.
    local provenance, and verifies the resulting registry version.
 
 3. On npmjs.org, configure a GitHub Actions trusted publisher for
-   `@jmagly/hound-mcp`, repository `jmagly/hound-mcp`, workflow
+   `hound-search-mcp`, repository `jmagly/hound-mcp`, workflow
    `npm-publish.yml`, environment `npm`. Do not create an `NPM_TOKEN`.
 4. Protect the GitHub `npm` environment and `main` branch. Require CI and an
    operator approval for the environment.
@@ -64,7 +64,7 @@ nightly versions publish with `nightly`.
    release tag is present on both remotes:
 
    ```bash
-   npm view @jmagly/hound-mcp@2026.8.0-alpha.0 version
+   npm view hound-search-mcp@2026.8.0-alpha.0 version
    git ls-remote origin refs/tags/vVERSION
    git ls-remote github refs/tags/vVERSION
    ```

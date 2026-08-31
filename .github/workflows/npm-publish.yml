@@ -40,7 +40,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           EXPECTED_INTEGRITY="$(npm pack --dry-run --json | jq -r '.[0].integrity')"
-          PUBLISHED="$(npm view "@jmagly/hound-mcp@$VERSION" dist.integrity 2>/dev/null || true)"
+          PUBLISHED="$(npm view "hound-search-mcp@$VERSION" dist.integrity 2>/dev/null || true)"
           if [ -n "$PUBLISHED" ]; then
             test "$PUBLISHED" = "$EXPECTED_INTEGRITY"
           else
@@ -50,7 +50,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           for attempt in 1 2 3 4 5; do
-            VIEW="$(npm view "@jmagly/hound-mcp@$VERSION" --json 2>/dev/null || true)"
+            VIEW="$(npm view "hound-search-mcp@$VERSION" --json 2>/dev/null || true)"
             if printf '%s' "$VIEW" | jq -e '.dist.integrity and .dist.tarball and (.dist.attestations | length > 0)' >/dev/null; then exit 0; fi
             sleep 10
           done

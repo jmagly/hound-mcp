@@ -1,5 +1,5 @@
 {
-  "name": "@jmagly/hound-mcp",
+  "name": "hound-search-mcp",
   "version": "2026.8.38",
   "description": "MCP server for multi-modal code search: text (Hound), symbols (tree-sitter), and future semantic search",
   "type": "module",
@@ -9,10 +9,7 @@
     "hound-mcp-auth": "dist/cli.js"
   },
   "files": [
-    "dist",
-    "README.md",
-    "LICENSE",
-    "CONTRIBUTING.md"
+    "dist/**/*.js"
   ],
   "scripts": {
     "build": "tsc",

@@ -39,7 +39,7 @@ Multi-modal code search MCP server combining [Hound](https://github.com/hound-se
 
 ```bash
 # From npm (when published)
-npm install -g @jmagly/hound-mcp
+npm install -g hound-search-mcp
 
 # From source
 git clone https://github.com/jmagly/hound-mcp.git
@@ -94,7 +94,7 @@ Or using npx (when published):
   "mcpServers": {
     "codehound": {
       "command": "npx",
-      "args": ["-y", "@jmagly/hound-mcp"],
+      "args": ["-y", "hound-search-mcp"],
       "env": {
         "HOUND_URL": "http://localhost:6080"
       }
