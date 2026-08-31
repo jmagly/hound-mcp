@@ -28,6 +28,7 @@ nightly versions publish with `nightly`.
    The publish form requires an authenticated npm owner session, publishes only
    the disposable CalVer alpha version under the `bootstrap` dist-tag, disables
    local provenance, and verifies the resulting registry version.
+
 3. On npmjs.org, configure a GitHub Actions trusted publisher for
    `@jmagly/hound-mcp`, repository `jmagly/hound-mcp`, workflow
    `npm-publish.yml`, environment `npm`. Do not create an `NPM_TOKEN`.
@@ -58,6 +59,15 @@ nightly versions publish with `nightly`.
 5. Verify the Gitea package and immutable container tag. On npmjs.org, verify
    package integrity, the expected dist-tag, and `dist.attestations` provenance.
    A release is incomplete until both registry legs and their CI runs are green.
+
+   Before the first public release, confirm the bootstrap package exists and the
+   release tag is present on both remotes:
+
+   ```bash
+   npm view @jmagly/hound-mcp@2026.8.0-alpha.0 version
+   git ls-remote origin refs/tags/vVERSION
+   git ls-remote github refs/tags/vVERSION
+   ```
 
 Never delete or move a published npm version. If a post-tag release fails,
 correct it with a new patch version. Never use a prerelease dist-tag for a

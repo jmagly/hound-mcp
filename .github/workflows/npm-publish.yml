@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm install --global npm@11.6.2
       - name: Verify signed tag and version
         run: |
           tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
@@ -35,7 +37,15 @@ jobs:
           esac
           echo "name=$CHANNEL" >> "$GITHUB_OUTPUT"
       - name: Publish with trusted publishing and provenance
-        run: npm publish --provenance --access public --tag "${{ steps.channel.outputs.name }}"
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          EXPECTED_INTEGRITY="$(npm pack --dry-run --json | jq -r '.[0].integrity')"
+          PUBLISHED="$(npm view "@jmagly/hound-mcp@$VERSION" dist.integrity 2>/dev/null || true)"
+          if [ -n "$PUBLISHED" ]; then
+            test "$PUBLISHED" = "$EXPECTED_INTEGRITY"
+          else
+            npm publish --provenance --access public --tag "${{ steps.channel.outputs.name }}"
+          fi
       - name: Verify public provenance
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"

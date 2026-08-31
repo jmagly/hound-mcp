@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
+      - run: npm install --global npm@11.6.2
       - name: Verify release input
         run: |
           apt-get update
@@ -42,6 +43,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - run: npm install --global npm@11.6.2
       - name: Install credential helper dependency
         run: |
           apt-get update
@@ -70,8 +72,18 @@ jobs:
           npm ci
           npm run build
           printf '%s\n' '//git.integrolabs.net/api/packages/roctinam/npm/:_authToken=${NODE_AUTH_TOKEN}' > /tmp/npmrc
-          npm publish --userconfig /tmp/npmrc --registry "$NPM_REGISTRY" \
-            --provenance=false --tag "${{ steps.channel.outputs.name }}"
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          EXPECTED_INTEGRITY="$(npm pack --dry-run --json | jq -r '.[0].integrity')"
+          PUBLISHED="$(npm view "@jmagly/hound-mcp@$VERSION" dist.integrity \
+            --userconfig /tmp/npmrc --registry "$NPM_REGISTRY" 2>/dev/null || true)"
+          if [ -n "$PUBLISHED" ]; then
+            test "$PUBLISHED" = "$EXPECTED_INTEGRITY"
+          else
+            npm publish --userconfig /tmp/npmrc --registry "$NPM_REGISTRY" \
+              --provenance=false --tag "${{ steps.channel.outputs.name }}"
+          fi
+          test "$(npm view "@jmagly/hound-mcp@$VERSION" dist.integrity \
+            --userconfig /tmp/npmrc --registry "$NPM_REGISTRY")" = "$EXPECTED_INTEGRITY"
   publish-container:
     runs-on: teroknor
     needs: publish-npm
