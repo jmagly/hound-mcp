@@ -3,7 +3,7 @@ kind: SetupManifest
 metadata:
   name: hound-search-mcp
   description: Install and register Hound Search MCP without replacing existing provider configuration.
-  version: 2026.8.39
+  version: 2026.8.40
   install_type: user
   execution_mode: provider-orchestrated
 
@@ -42,7 +42,7 @@ spec:
       description: Base URL of the existing Hound service.
     - name: PACKAGE_VERSION
       type: string
-      default: 2026.8.39
+      default: 2026.8.40
       description: Immutable hound-search-mcp npm version to install.
     - name: SERVER_NAME
       type: string

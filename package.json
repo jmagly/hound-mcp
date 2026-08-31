@@ -1,6 +1,6 @@
 {
   "name": "hound-search-mcp",
-  "version": "2026.8.39",
+  "version": "2026.8.40",
   "description": "MCP server for multi-modal code search: text (Hound), symbols (tree-sitter), and future semantic search",
   "type": "module",
   "main": "dist/index.js",

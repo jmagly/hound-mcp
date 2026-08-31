@@ -7,6 +7,11 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 
 ## [Unreleased]
 
+## [2026.8.40] - 2026-08-31
+
+### Fixed
+- Restore the annotated tag object in GitHub Actions before signed-tag verification; `2026.8.39` was not published publicly because checkout peeled the tag to its commit.
+
 ## [2026.8.39] - 2026-08-31
 
 ### Added
@@ -114,7 +119,8 @@ and this project uses calendar versioning (`YYYY.M.PATCH`).
 - Supports Node.js 20+
 - Configurable via environment variables
 
-[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.39...HEAD
+[Unreleased]: https://github.com/jmagly/hound-mcp/compare/v2026.8.40...HEAD
+[2026.8.40]: https://github.com/jmagly/hound-mcp/compare/v2026.8.39...v2026.8.40
 [2026.8.39]: https://github.com/jmagly/hound-mcp/compare/v2026.8.38...v2026.8.39
 [2026.8.38]: https://github.com/jmagly/hound-mcp/compare/v2026.8.37...v2026.8.38
 [2026.8.37]: https://github.com/jmagly/hound-mcp/compare/v2026.8.36...v2026.8.37

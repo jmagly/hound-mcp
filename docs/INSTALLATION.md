@@ -61,7 +61,7 @@ MCP integration if one is available.
 ```bash
 claude mcp add --transport stdio \
   --env HOUND_URL=http://localhost:6080 \
-  hound-search -- npx -y hound-search-mcp@2026.8.39
+  hound-search -- npx -y hound-search-mcp@2026.8.40
 
 claude mcp list
 ```
@@ -82,7 +82,7 @@ do not overwrite other registered servers.
   "mcpServers": {
     "hound-search": {
       "command": "npx",
-      "args": ["-y", "hound-search-mcp@2026.8.39"],
+      "args": ["-y", "hound-search-mcp@2026.8.40"],
       "env": {
         "HOUND_URL": "http://localhost:6080"
       }
@@ -100,7 +100,7 @@ secret or user-level configuration store, not in a committed workspace file.
 Confirm the package and Hound endpoint before testing through the provider:
 
 ```bash
-npm view hound-search-mcp@2026.8.39 version
+npm view hound-search-mcp@2026.8.40 version
 curl --fail --silent --show-error http://localhost:6080/api/v1/repos
 ```
 

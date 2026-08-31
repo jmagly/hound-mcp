@@ -24,7 +24,9 @@ jobs:
       - run: npm install --global npm@11.6.2
       - name: Verify signed tag and version
         run: |
-          tools/ci/verify-signed-tag.sh "${GITHUB_REF#refs/tags/}"
+          RELEASE_TAG="${GITHUB_REF#refs/tags/}"
+          git fetch --force origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          tools/ci/verify-signed-tag.sh "$RELEASE_TAG"
           test "${GITHUB_REF#refs/tags/v}" = "$(node -p "require('./package.json').version")"
       - run: npm ci && npm run check
       - name: Select dist-tag
